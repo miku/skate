@@ -1,6 +1,6 @@
 # skate
 
-Fast sorted key extraction.
+Fast sorted key extraction and extra utilities.
 
 ## Problem
 
