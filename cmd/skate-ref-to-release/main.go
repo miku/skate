@@ -3,8 +3,10 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
+	"runtime"
 
 	"github.com/miku/parallel"
 	"github.com/miku/skate"
@@ -12,9 +14,15 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-var bytesNewline = []byte("\n")
+var (
+	numWorkers = flag.Int("w", runtime.NumCPU(), "number of workers")
+	batchSize  = flag.Int("b", 100000, "batch size")
+
+	bytesNewline = []byte("\n")
+)
 
 func main() {
+	flag.Parse()
 	pp := parallel.NewProcessor(os.Stdin, os.Stdout, func(p []byte) ([]byte, error) {
 		var (
 			json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -31,6 +39,8 @@ func main() {
 		b = append(b, bytesNewline...)
 		return b, err
 	})
+	pp.NumWorkers = *numWorkers
+	pp.BatchSize = *batchSize
 	if err := pp.Run(); err != nil {
 		log.Fatal(err)
 	}
