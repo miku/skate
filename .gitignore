@@ -13,3 +13,7 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+#
+skate-ref-to-release
+skate-sorted-keys
+packaging/debian/skate/usr
