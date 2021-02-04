@@ -68,7 +68,7 @@ type IdentTitleDoc struct {
 func KeyTitle(p []byte) (ident string, key string, err error) {
 	var doc IdentTitleDoc
 	if err = json.Unmarshal(p, &doc); err != nil {
-		return
+		return ident, key, err
 	}
 	title := wsReplacer.Replace(strings.TrimSpace(doc.Title))
 	return doc.Ident, title, nil
@@ -93,7 +93,16 @@ func KeyTitleNysiis(p []byte) (ident string, key string, err error) {
 	if err != nil {
 		return
 	}
-	return ident, skate.NYSIIS(key), nil
+	return ident, NYSIIS(key), nil
+}
+
+// KeyTitleSandcrawler applies more sophisticated title cleanup.
+func KeyTitleSandcrawler(p []byte) (ident string, key string, err error) {
+	ident, key, err = KeyTitle(p)
+	if err != nil {
+		return
+	}
+	return ident, sandcrawlerSlugify(key), err
 }
 
 func sandcrawlerSlugify(s string) string {
@@ -103,7 +112,7 @@ func sandcrawlerSlugify(s string) string {
 			slug = slug[:len(prefix)]
 		}
 	}
-	slug = strings.ReplaceAll("&apos;", "'")
+	slug = strings.ReplaceAll(slug, "&apos;", "'")
 	for k, v := range SandcrawlerCharMap {
 		slug = strings.ReplaceAll(slug, k, v)
 	}
@@ -113,8 +122,4 @@ func sandcrawlerSlugify(s string) string {
 	slug = norm.NFKD.String(slug)
 	slug = SandcrawlerRemoveCharRegex.ReplaceAllString(slug, "")
 	return strings.ToLower(slug)
-}
-
-func KeyTitleSandcrawler(p []byte) (ident string, key string, err error) {
-
 }
