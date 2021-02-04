@@ -21,13 +21,13 @@ clean:
 	rm -f $(TARGETS)
 	rm -f $(PKGNAME)_*.deb
 	rm -f $(PKGNAME)*.rpm
-	rm -rf packaging/deb/esdump/usr
+	rm -rf packaging/debian/$(PKGNAME)/usr
 
 .PHONY: deb
 deb: all
-	mkdir -p packaging/deb/$(PKGNAME)/usr/local/bin
-	cp $(TARGETS) packaging/deb/$(PKGNAME)/usr/local/bin
-	cd packaging/deb && fakeroot dpkg-deb --build $(PKGNAME) .
-	mv packaging/deb/$(PKGNAME)_*.deb .
+	mkdir -p packaging/debian/$(PKGNAME)/usr/local/bin
+	cp $(TARGETS) packaging/debian/$(PKGNAME)/usr/local/bin
+	cd packaging/debian && fakeroot dpkg-deb --build $(PKGNAME) .
+	mv packaging/debian/$(PKGNAME)_*.deb .
 
 

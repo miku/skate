@@ -17,3 +17,4 @@
 skate-ref-to-release
 skate-sorted-keys
 packaging/debian/skate/usr
+skate_*_amd64.deb
