@@ -3,17 +3,23 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"os"
 
 	"github.com/miku/parallel"
 	"github.com/miku/skate"
+
+	jsoniter "github.com/json-iterator/go"
 )
+
+var bytesNewline = []byte("\n")
 
 func main() {
 	pp := parallel.NewProcessor(os.Stdin, os.Stdout, func(p []byte) ([]byte, error) {
-		var ref skate.Ref
+		var (
+			json = jsoniter.ConfigCompatibleWithStandardLibrary
+			ref  skate.Ref
+		)
 		if err := json.Unmarshal(p, &ref); err != nil {
 			return nil, err
 		}
@@ -21,7 +27,9 @@ func main() {
 		if err != nil {
 			return nil, err
 		}
-		return json.Marshal(release)
+		b, err := json.Marshal(release)
+		b = append(b, bytesNewline...)
+		return b, err
 	})
 	if err := pp.Run(); err != nil {
 		log.Fatal(err)
