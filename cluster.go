@@ -54,8 +54,12 @@ var (
 	SandcrawlerPrefixRemove = []string{
 		"original article: ", "original article ", "article: ", "title: ",
 	}
-	// SandcrawlerPrefixRemove misses classes: Punctuation, M, InCombiningDiacriticalMarks.
-	SandcrawlerRemoveCharRegex = regexp.MustCompile(`[!?.\s\u2000-\u206F\u2E00-\u2E7F’\u0060·“”‘’“”«»「」¿–±§_°ʖ©®¤=<>|+$^~≈√∫≤≥÷ƒ∆¬£¢∞¥◊€]`)
+	// SandcrawlerPrefixRemove does not have:
+	// InCombiningDiacriticalMarks (assume it's in "M"),
+	// https://unicodebook.readthedocs.io/unicode.html,
+	// https://stackoverflow.com/q/5697171/89391,
+	// https://github.com/google/re2/wiki/Syntax.
+	SandcrawlerRemoveCharRegex = regexp.MustCompile("[\\s\\p{P}\\p{M}\u2000-\u206F\u2E00-\u2E7F’\u0060·“”‘’“”«»「」¿–±§_°ʖ©®¤=<>|+$^~≈√∫≤≥÷ƒ∆¬£¢∞¥◊€]")
 )
 
 // IdentTitleDoc is a minimal subset of fields, we can work with.
