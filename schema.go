@@ -68,8 +68,10 @@ func (ref *Ref) YearString() string {
 		return v
 	case int:
 		return strconv.Itoa(v)
+	case float32, float64:
+		return fmt.Sprintf("%f", v)
 	default:
-		return fmt.Sprintf("%d", v)
+		return fmt.Sprintf("%v", v)
 	}
 }
 
