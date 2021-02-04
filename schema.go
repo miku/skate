@@ -1,9 +1,6 @@
 package skate
 
-import (
-	"fmt"
-	"strconv"
-)
+import "strconv"
 
 // RefToRelease converts a ref to a release.
 func RefToRelease(ref *Ref) (*Release, error) {
@@ -28,7 +25,7 @@ func RefToRelease(ref *Ref) (*Release, error) {
 	release.Volume = b.Volume
 	release.Issue = b.Issue
 	release.Pages = b.Pages
-	release.ReleaseYear = ref.YearString()
+	release.ReleaseYear = strconv.Itoa(int(b.ReleaseYear))
 	for i, name := range b.ContribRawNames {
 		contribs[i].RawName = name
 	}
@@ -39,40 +36,26 @@ func RefToRelease(ref *Ref) (*Release, error) {
 // Ref is a reference document.
 type Ref struct {
 	Biblio struct {
-		ArxivId         string      `json:"arxiv_id,omitempty"`
-		ContainerName   string      `json:"container_name,omitempty"`
-		ContribRawNames []string    `json:"contrib_raw_names,omitempty"`
-		DOI             string      `json:"doi,omitempty"`
-		Issue           string      `json:"issue,omitempty"`
-		Pages           string      `json:"pages,omitempty"`
-		PMCID           string      `json:"pmcid,omitempty"`
-		PMID            string      `json:"pmid,omitempty"`
-		Publisher       string      `json:"publisher,omitempty"`
-		Title           string      `json:"title,omitempty"`
-		Unstructured    string      `json:"unstructured,omitempty"`
-		Url             string      `json:"url,omitempty"`
-		Volume          string      `json:"volume,omitempty"`
-		Year            interface{} `json:"year,omitempty"`
+		ArxivId         string   `json:"arxiv_id,omitempty"`
+		ContainerName   string   `json:"container_name,omitempty"`
+		ContribRawNames []string `json:"contrib_raw_names,omitempty"`
+		DOI             string   `json:"doi,omitempty"`
+		Issue           string   `json:"issue,omitempty"`
+		PMCID           string   `json:"pmcid,omitempty"`
+		PMID            string   `json:"pmid,omitempty"`
+		Pages           string   `json:"pages,omitempty"`
+		Publisher       string   `json:"publisher,omitempty"`
+		ReleaseYear     int64    `json:"release_year,omitempty"`
+		Title           string   `json:"title,omitempty"`
+		Unstructured    string   `json:"unstructured,omitempty"`
+		Url             string   `json:"url,omitempty"`
+		Volume          string   `json:"volume,omitempty"`
 	} `json:"biblio"`
 	Index        int64  `json:"index,omitempty"`
 	Key          string `json:"key,omitempty"`
 	RefSource    string `json:"ref_source,omitempty"`
 	ReleaseIdent string `json:"release_ident,omitempty"`
-	ReleaseYear  int64  `json:"release_year,omitempty"`
 	WorkIdent    string `json:"work_ident,omitempty"`
-}
-
-func (ref *Ref) YearString() string {
-	switch v := ref.Biblio.Year.(type) {
-	case string:
-		return v
-	case int:
-		return strconv.Itoa(v)
-	case float32, float64:
-		return fmt.Sprintf("%f", v)
-	default:
-		return fmt.Sprintf("%v", v)
-	}
 }
 
 // Release document.
