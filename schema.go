@@ -25,7 +25,7 @@ func RefToRelease(ref *Ref) (*Release, error) {
 	release.Volume = b.Volume
 	release.Issue = b.Issue
 	release.Pages = b.Pages
-	release.ReleaseYear = strconv.Itoa(int(b.ReleaseYear))
+	release.ReleaseYear = strconv.Itoa(ref.ReleaseYear)
 	for i, name := range b.ContribRawNames {
 		contribs[i].RawName = name
 	}
@@ -45,15 +45,16 @@ type Ref struct {
 		PMID            string   `json:"pmid,omitempty"`
 		Pages           string   `json:"pages,omitempty"`
 		Publisher       string   `json:"publisher,omitempty"`
-		ReleaseYear     int64    `json:"release_year,omitempty"`
 		Title           string   `json:"title,omitempty"`
 		Unstructured    string   `json:"unstructured,omitempty"`
 		Url             string   `json:"url,omitempty"`
 		Volume          string   `json:"volume,omitempty"`
+		Year            int64    `json:"year,omitempty"`
 	} `json:"biblio"`
 	Index        int64  `json:"index,omitempty"`
 	Key          string `json:"key,omitempty"`
 	RefSource    string `json:"ref_source,omitempty"`
+	ReleaseYear  int    `json:"release_year,omitempty"`
 	ReleaseIdent string `json:"release_ident,omitempty"`
 	WorkIdent    string `json:"work_ident,omitempty"`
 }
