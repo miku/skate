@@ -11,7 +11,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -47,13 +46,6 @@ func main() {
 	}
 	if keyFunc, ok = keyOpts[*keyFuncName]; !ok {
 		log.Fatal("invalid key func")
-	}
-	if *outputFilename == "" {
-		f, err := ioutil.TempFile("", "skate-sorted-keys-")
-		if err != nil {
-			log.Fatal(err)
-		}
-		*outputFilename = f.Name()
 	}
 	// We have more complex cleanup logic in the key extraction functions,
 	// which run in parallel; the rest of the pipeline is compressed unix
