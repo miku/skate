@@ -65,7 +65,7 @@ var (
 // IdentTitleDoc is a minimal subset of fields, we can work with.
 type IdentTitleDoc struct {
 	Ident string `json:"ident"`
-	Title string `json:"ident"`
+	Title string `json:"title"`
 }
 
 // KeyTitle is extract the title, and slight cleaning.
