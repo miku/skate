@@ -1,10 +1,16 @@
-// skate-sorted-keys derives a key from a JSON document.
+// skate-sorted-keys derives a key from JSON documents.
 //
-// This is a processing stage for clustering. Input is jsonlines of release
-// docs, output is a TSV with id, key and the json doc, optionally sorted by
-// key.
+// $ zstdcat release_export_expanded.json.zst | skate-sorted-keys | zstd -c > keydocs.tsv
 //
-// Notes: Using https://github.com/DataDog/zstd#stream-api, 3700 docs/s for key
+// Result will be a three column TSV (ident, key, doc), sorted (LC_ALL=C) by key.
+//
+// 4lzgf5wzljcptlebhyobccj7ru      2568diamagneticsusceptibilityofh8n2o10sr        {"abstracts":[],"refs":[],"contribs":[ ...
+//
+// After this step, an "itertools.groupby" on key can yield clusters.
+//
+// Notes
+//
+// Using https://github.com/DataDog/zstd#stream-api, 3700 docs/s for key
 // extraction only; using zstd -T0, we get 21K docs/s; about 13K docs/s; about
 // 32h for 1.5B records.
 package main
@@ -26,8 +32,7 @@ var (
 	keyFuncName     = flag.String("f", "tsand", "key function name")
 	numWorkers      = flag.Int("w", runtime.NumCPU(), "number of workers")
 	batchSize       = flag.Int("b", 50000, "batch size")
-	outputFilename  = flag.String("o", "", "output filename")
-	compressProgram = flag.String("compress-program", "zstd", "compress program")
+	compressProgram = flag.String("compress-program", "zstd", "compress program, passed to sort")
 
 	wsReplacer = strings.NewReplacer("\t", "", "\n", "")
 	keyOpts    = map[string]skate.IdentifierKeyFunc{
@@ -48,34 +53,20 @@ func main() {
 	if keyFunc, ok = keyOpts[*keyFuncName]; !ok {
 		log.Fatal("invalid key func")
 	}
-	// We have more complex cleanup logic in the key extraction functions,
-	// which run in parallel; the rest of the pipeline is compressed unix
-	// hackery.
 	command := fmt.Sprintf("LC_ALL=C sort -k2,2 --compress-program %s", *compressProgram)
-	if *outputFilename != "" {
-		command = fmt.Sprintf("%s | %s -c9 > %s", command, *compressProgram, *outputFilename)
-	}
 	cmd := exec.Command("bash", "-c", command)
 	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
 	w, err := cmd.StdinPipe() // Pipe in our release entities.
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer w.Close()
-	r, err := cmd.StdoutPipe() // Pass on to grouper.
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer r.Close()
-	go func() {
-		if err := skate.Grouper(r, os.Stdout); err != nil {
-			log.Fatal(err)
-		}
-	}()
+	done := make(chan bool)
 	go func() {
 		if err := cmd.Run(); err != nil {
 			log.Fatal(err)
 		}
+		done <- true
 	}()
 	pp := parallel.NewProcessor(os.Stdin, w, func(p []byte) ([]byte, error) {
 		ident, key, err := keyFunc(p)
@@ -90,4 +81,8 @@ func main() {
 	if err := pp.Run(); err != nil {
 		log.Fatal(err)
 	}
+	if err := w.Close(); err != nil {
+		log.Fatal(err)
+	}
+	<-done
 }
