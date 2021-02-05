@@ -18,6 +18,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -34,6 +35,7 @@ var (
 	batchSize       = flag.Int("b", 50000, "batch size")
 	compressProgram = flag.String("compress-program", "zstd", "compress program, passed to sort")
 	verbose         = flag.Bool("verbose", false, "show progress")
+	skipSort        = flag.Bool("S", false, "skip sorting")
 
 	wsReplacer = strings.NewReplacer("\t", "", "\n", "")
 	keyOpts    = map[string]skate.IdentifierKeyFunc{
@@ -54,21 +56,28 @@ func main() {
 	if keyFunc, ok = keyOpts[*keyFuncName]; !ok {
 		log.Fatal("invalid key func")
 	}
-	command := fmt.Sprintf("LC_ALL=C sort -k2,2 --compress-program %s", *compressProgram)
-	cmd := exec.Command("bash", "-c", command)
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-	w, err := cmd.StdinPipe() // Pipe in our release entities.
-	if err != nil {
-		log.Fatal(err)
-	}
-	done := make(chan bool)
-	go func() {
-		if err := cmd.Run(); err != nil {
+	var (
+		w    io.WriteCloser = os.Stdout
+		err  error
+		done = make(chan bool) // used for pipe
+	)
+	if !*skipSort {
+		command := fmt.Sprintf("LC_ALL=C sort -k2,2 --compress-program %s", *compressProgram)
+		cmd := exec.Command("bash", "-c", command)
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = os.Stdout
+		w, err = cmd.StdinPipe() // Pipe in our release entities.
+		if err != nil {
 			log.Fatal(err)
 		}
-		done <- true
-	}()
+		done := make(chan bool)
+		go func() {
+			if err := cmd.Run(); err != nil {
+				log.Fatal(err)
+			}
+			done <- true
+		}()
+	}
 	pp := parallel.NewProcessor(os.Stdin, w, func(p []byte) ([]byte, error) {
 		ident, key, err := keyFunc(p)
 		if err != nil {
@@ -83,8 +92,10 @@ func main() {
 	if err := pp.Run(); err != nil {
 		log.Fatal(err)
 	}
-	if err := w.Close(); err != nil {
-		log.Fatal(err)
+	if !*skipSort {
+		if err := w.Close(); err != nil {
+			log.Fatal(err)
+		}
+		<-done
 	}
-	<-done
 }
