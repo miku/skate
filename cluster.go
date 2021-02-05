@@ -132,7 +132,7 @@ func sandcrawlerSlugify(s string) string {
 }
 
 // Grouper groups docs with the same key. XXX: could pass in the cmp.
-func Grouper(r io.Reader, w io.Writer, f func(string) string) error {
+func Grouper(r io.Reader, w io.Writer) error {
 	var (
 		br    = bufio.NewReader(r)
 		batch = []string{}
@@ -146,7 +146,12 @@ func Grouper(r io.Reader, w io.Writer, f func(string) string) error {
 		if err != nil {
 			return err
 		}
-		key := f(line)
+		// XXX: hard-coded for now
+		fields := strings.Split(strings.TrimSpace(line), "\t")
+		if len(fields) != 3 {
+			continue
+		}
+		key := fields[1]
 		if prev != "" && prev != key {
 			// if len(batch) < 2 {
 			// 	continue // XXX: make this an option

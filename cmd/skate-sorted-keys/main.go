@@ -57,24 +57,21 @@ func main() {
 	}
 	cmd := exec.Command("bash", "-c", command)
 	cmd.Stderr = os.Stderr
-	w, err := cmd.StdinPipe()
+	w, err := cmd.StdinPipe() // Pipe in our release entities.
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer w.Close()
-	r, err := cmd.StdoutPipe()
+	r, err := cmd.StdoutPipe() // Pass on to grouper.
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer r.Close()
 	go func() {
-		Grouper(r, os.Stdout, func(line string) string {
-			fields := strings.Split(strings.TrimSpace(line), "\t")
-			if fields > 1 {
-				return fields[1]
-			}
-		})
-	}
+		if err := skate.Grouper(r, os.Stdout); err != nil {
+			log.Fatal(err)
+		}
+	}()
 	go func() {
 		if err := cmd.Run(); err != nil {
 			log.Fatal(err)
