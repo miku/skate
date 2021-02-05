@@ -24,7 +24,7 @@ import (
 var (
 	keyFuncName    = flag.String("f", "tsand", "key function name")
 	numWorkers     = flag.Int("w", runtime.NumCPU(), "number of workers")
-	batchSize      = flag.Int("b", 100000, "batch size")
+	batchSize      = flag.Int("b", 50000, "batch size")
 	outputFilename = flag.String("o", "", "output filename")
 
 	wsReplacer = strings.NewReplacer("\t", "", "\n", "")
