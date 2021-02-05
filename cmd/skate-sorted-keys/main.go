@@ -24,8 +24,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/miku/parallel"
 	"github.com/miku/skate"
+	"github.com/miku/skate/parallel"
 )
 
 var (
