@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-TARGETS := skate-ref-to-release skate-sorted-keys
+TARGETS := skate-ref-to-release skate-sorted-keys skate-cluster
 PKGNAME := skate
 
 COMMIT := $(shell git rev-parse --short HEAD)
