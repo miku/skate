@@ -3,6 +3,9 @@
 // This is a processing stage for clustering. Input is jsonlines of release
 // docs, output is a TSV with id, key and the json doc, optionally sorted by
 // key.
+//
+// Notes: Using https://github.com/DataDog/zstd#stream-api, 3700 docs/s for key
+// extraction only.
 package main
 
 import (
@@ -62,6 +65,11 @@ func main() {
 		log.Fatal(err)
 	}
 	defer w.Close()
+	go func() {
+		if err := cmd.Run(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 	pp := parallel.NewProcessor(os.Stdin, w, func(p []byte) ([]byte, error) {
 		ident, key, err := keyFunc(p)
 		if err != nil {
