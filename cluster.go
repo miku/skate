@@ -1,9 +1,7 @@
 package skate
 
 import (
-	"bufio"
 	"encoding/json"
-	"fmt"
 	"io"
 	"regexp"
 	"strings"
@@ -133,38 +131,40 @@ func sandcrawlerSlugify(s string) string {
 
 // Grouper groups docs with the same key. XXX: could pass in the cmp.
 func Grouper(r io.Reader, w io.Writer) error {
-	var (
-		br    = bufio.NewReader(r)
-		batch = []string{}
-		prev  = ""
-	)
-	for {
-		line, err := br.ReadString('\n')
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-		// XXX: hard-coded for now
-		fields := strings.Split(strings.TrimSpace(line), "\t")
-		if len(fields) != 3 {
-			continue
-		}
-		key := fields[1]
-		if prev != "" && prev != key {
-			// if len(batch) < 2 {
-			// 	continue // XXX: make this an option
-			// }
-			v := strings.Join(batch, ", ")
-			if _, err := fmt.Fprintf(w, `{"k": %q, "v": [%s]}\n`, prev, v); err != nil {
-				return err
-			}
-			batch = batch[:]
-		} else {
-			batch = append(batch, fields[2])
-		}
-		prev = key
-	}
-	return nil
+	_, err := io.Copy(w, r)
+	return err
+	// var (
+	// 	br    = bufio.NewReader(r)
+	// 	batch = []string{}
+	// 	prev  = ""
+	// )
+	// for {
+	// 	line, err := br.ReadString('\n')
+	// 	if err == io.EOF {
+	// 		break
+	// 	}
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	// XXX: hard-coded for now
+	// 	fields := strings.Split(strings.TrimSpace(line), "\t")
+	// 	if len(fields) != 3 {
+	// 		continue
+	// 	}
+	// 	key := fields[1]
+	// 	if prev != "" && prev != key {
+	// 		// if len(batch) < 2 {
+	// 		// 	continue // XXX: make this an option
+	// 		// }
+	// 		v := strings.Join(batch, ", ")
+	// 		if _, err := fmt.Fprintf(w, `{"k": %q, "v": [%s]}\n`, prev, v); err != nil {
+	// 			return err
+	// 		}
+	// 		batch = batch[:]
+	// 	} else {
+	// 		batch = append(batch, fields[2])
+	// 	}
+	// 	prev = key
+	// }
+	// return nil
 }
