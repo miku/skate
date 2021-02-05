@@ -34,19 +34,23 @@ func main() {
 		}
 		key, doc := fields[1], fields[2]
 		if prev != key {
-			if len(batch) > 0 {
-				if _, err := fmt.Fprintf(bw, `{"%s": [%s]}\n`, key, strings.Join(batch, ",")); err != nil {
-					log.Fatal(err)
-				}
+			if err := writeBatch(bw, key, batch); err != nil {
+				log.Fatal(err)
 			}
 			batch = nil
 		}
 		batch = append(batch, doc)
 		prev = key
 	}
-	if len(batch) > 0 {
-		if _, err := fmt.Fprintf(bw, `{"%s": [%s]}\n`, prev, strings.Join(batch, ",")); err != nil {
-			log.Fatal(err)
-		}
+	if err := writeBatch(bw, prev, batch); err != nil {
+		log.Fatal(err)
 	}
+}
+
+func writeBatch(w io.Writer, key string, batch []string) (err error) {
+	if len(batch) == 0 {
+		return nil
+	}
+	_, err = fmt.Fprintf(w, `{"%s": [%s]}\n`, key, strings.Join(batch, ","))
+	return
 }

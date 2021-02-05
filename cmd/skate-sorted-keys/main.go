@@ -4,15 +4,20 @@
 //
 // Result will be a three column TSV (ident, key, doc), sorted (LC_ALL=C) by key.
 //
-// 4lzgf5wzljcptlebhyobccj7ru      2568diamagneticsusceptibilityofh8n2o10sr        {"abstracts":[],"refs":[],"contribs":[ ...
+// 4lzgf5wzljcptlebhyobccj7ru    2568diamagneticsusceptibilityofh8n2o10sr    {"abstracts":[],...
 //
-// After this step, an "itertools.groupby" on key can yield clusters.
+// After this step, a fast "itertools.groupby" or "skate-cluster" on key can yields clusters.
 //
 // Notes
 //
 // Using https://github.com/DataDog/zstd#stream-api, 3700 docs/s for key
 // extraction only; using zstd -T0, we get 21K docs/s; about 13K docs/s; about
 // 32h for 1.5B records.
+//
+// On a 16-core box. About 40K sustained extraction, w/o sorting; sort very low
+// CPU, down to 5%, even on /fast disk. 10M entries takes very long to sort
+// (did not finish after 30min). Trying 2-step, "extract-sort"; 24 workers; E:
+// 6min; S: 10+min.
 package main
 
 import (
