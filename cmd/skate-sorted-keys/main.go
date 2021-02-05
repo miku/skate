@@ -55,6 +55,8 @@ func main() {
 		command = fmt.Sprintf("%s | %s -c9 > %s", command, *compressProgram, *outputFilename)
 	}
 	cmd := exec.Command("bash", "-c", command)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	w, err := cmd.StdinPipe()
 	if err != nil {
 		log.Fatal(err)
