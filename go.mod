@@ -8,6 +8,6 @@ require (
 	github.com/hoisie/mustache v0.0.0-20160804235033-6375acf62c69 // indirect
 	github.com/json-iterator/go v1.1.10
 	github.com/miku/clam v0.0.0-20150701134247-8054bf3dfcec // indirect
-	github.com/miku/parallel v0.0.0-20210205190127-d1fa15dcea0c
+	github.com/miku/parallel v0.0.0-20210205190127-d1fa15dcea0c // indirect
 	golang.org/x/text v0.3.5
 )
