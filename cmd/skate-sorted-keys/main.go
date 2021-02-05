@@ -8,37 +8,65 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"runtime"
 	"strings"
 
+	"github.com/DataDog/zstd"
+	"github.com/miku/clam"
 	"github.com/miku/parallel"
 	"github.com/miku/skate"
 )
 
-var keyOpts = map[string]skate.IdentifierKeyFunc{
-	"title": skate.KeyTitle,
-	"tnorm": skate.KeyTitleNormalized,
-	"tnysi": skate.KeyTitleNysiis,
-	"tsand": skate.KeyTitleSandcrawler,
-}
-
 var (
-	keyFuncName = flag.String("f", "tsand", "key function name")
-	numWorkers  = flag.Int("w", runtime.NumCPU(), "number of workers")
-	batchSize   = flag.Int("b", 100000, "batch size")
+	keyFuncName    = flag.String("f", "tsand", "key function name")
+	numWorkers     = flag.Int("w", runtime.NumCPU(), "number of workers")
+	batchSize      = flag.Int("b", 100000, "batch size")
+	outputFilename = flag.String("o", "", "output filename")
 
 	wsReplacer = strings.NewReplacer("\t", "", "\n", "")
+	keyOpts    = map[string]skate.IdentifierKeyFunc{
+		"title": skate.KeyTitle,
+		"tnorm": skate.KeyTitleNormalized,
+		"tnysi": skate.KeyTitleNysiis,
+		"tsand": skate.KeyTitleSandcrawler,
+	}
+	keyFunc skate.IdentifierKeyFunc
+	ok      bool
 )
 
 func main() {
 	flag.Parse()
-	keyFunc, ok := keyOpts[*keyFuncName]
-	if !ok {
+	if _, err := exec.LookPath("zstd"); err != nil {
+		log.Fatal("zstd command line tool required")
+	}
+	if keyFunc, ok = keyOpts[*keyFuncName]; !ok {
 		log.Fatal("invalid key func")
 	}
-	pp := parallel.NewProcessor(os.Stdin, os.Stdout, func(p []byte) ([]byte, error) {
+	f, err := ioutil.TempFile("", "skate-sorted-keys-")
+	if err != nil {
+		log.Fatal(err)
+	}
+	zf := zstd.NewWriterLevel(f, 9)
+	defer func() {
+		if err := zf.Close(); err != nil {
+			log.Fatal(err)
+		}
+		output, err := clam.RunOutput("zstdcat -T0 {input} | LC_ALL=C sort -k2,2 | zstd -c9 > {output}",
+			clam.Map{"input": f.Name()})
+		if err != nil {
+			log.Fatal(err)
+		}
+		if *outputFilename != "" {
+			if err := os.Rename(output, *outputFilename); err != nil {
+				log.Fatal(err)
+			}
+		}
+	}()
+	pp := parallel.NewProcessor(os.Stdin, zf, func(p []byte) ([]byte, error) {
 		ident, key, err := keyFunc(p)
 		if err != nil {
 			return nil, err
