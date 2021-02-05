@@ -79,9 +79,7 @@ func main() {
 	})
 	pp.NumWorkers = *numWorkers
 	pp.BatchSize = *batchSize
-	if *verbose {
-		pp.LogEvery = 1000000
-	}
+	pp.Verbose = *verbose
 	if err := pp.Run(); err != nil {
 		log.Fatal(err)
 	}
