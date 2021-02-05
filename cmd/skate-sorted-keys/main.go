@@ -64,6 +64,8 @@ func main() {
 			if err := os.Rename(output, *outputFilename); err != nil {
 				log.Fatal(err)
 			}
+		} else {
+			log.Println(output)
 		}
 	}()
 	pp := parallel.NewProcessor(os.Stdin, zf, func(p []byte) ([]byte, error) {
