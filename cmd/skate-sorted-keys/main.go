@@ -58,7 +58,10 @@ func main() {
 	// We have more complex cleanup logic in the key extraction functions,
 	// which run in parallel; the rest of the pipeline is compressed unix
 	// hackery.
-	command := fmt.Sprintf("LC_ALL=C sort -k2,2 --compress-program %s | %s -c9 > %s", *compressProgram, *compressProgram, *outputFilename)
+	command := fmt.Sprintf("LC_ALL=C sort -k2,2 --compress-program %s", *compressProgram)
+	if *outputFilename != "" {
+		command = fmt.Sprintf("%s | %s -c9 > %s", command, *compressProgram, *outputFilename)
+	}
 	cmd := exec.Command("bash", "-c", command)
 	w, err := cmd.StdinPipe()
 	if err != nil {
