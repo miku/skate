@@ -5,7 +5,8 @@
 // key.
 //
 // Notes: Using https://github.com/DataDog/zstd#stream-api, 3700 docs/s for key
-// extraction only.
+// extraction only; using zstd -T0, we get 21K docs/s; about 13K docs/s; about
+// 32h for 1.5B records.
 package main
 
 import (
@@ -55,13 +56,25 @@ func main() {
 		command = fmt.Sprintf("%s | %s -c9 > %s", command, *compressProgram, *outputFilename)
 	}
 	cmd := exec.Command("bash", "-c", command)
-	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	w, err := cmd.StdinPipe()
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer w.Close()
+	r, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer r.Close()
+	go func() {
+		Grouper(r, os.Stdout, func(line string) string {
+			fields := strings.Split(strings.TrimSpace(line), "\t")
+			if fields > 1 {
+				return fields[1]
+			}
+		})
+	}
 	go func() {
 		if err := cmd.Run(); err != nil {
 			log.Fatal(err)

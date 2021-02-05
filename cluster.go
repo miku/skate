@@ -1,7 +1,10 @@
 package skate
 
 import (
+	"bufio"
 	"encoding/json"
+	"fmt"
+	"io"
 	"regexp"
 	"strings"
 
@@ -126,4 +129,37 @@ func sandcrawlerSlugify(s string) string {
 	slug = norm.NFKD.String(slug)
 	slug = SandcrawlerRemoveCharRegex.ReplaceAllString(slug, "")
 	return strings.ToLower(slug)
+}
+
+// Grouper groups docs with the same key. XXX: could pass in the cmp.
+func Grouper(r io.Reader, w io.Writer, f func(string) string) error {
+	var (
+		br    = bufio.NewReader(r)
+		batch = []string{}
+		prev  = ""
+	)
+	for {
+		line, err := br.ReadString('\n')
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		key := f(line)
+		if prev != "" && prev != key {
+			// if len(batch) < 2 {
+			// 	continue // XXX: make this an option
+			// }
+			v := strings.Join(batch, ", ")
+			if _, err := fmt.Fprintf(w, `{"k": %q, "v": [%s]}\n`, prev, v); err != nil {
+				return err
+			}
+			batch = batch[:]
+		} else {
+			batch = append(batch, fields[2])
+		}
+		prev = key
+	}
+	return nil
 }
