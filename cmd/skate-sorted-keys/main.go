@@ -50,7 +50,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		outputFilename = f.Name()
+		*outputFilename = f.Name()
 	}
 	// We have more complex cleanup logic in the key extraction functions,
 	// which run in parallel; the rest of the pipeline is compressed unix
