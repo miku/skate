@@ -15,17 +15,16 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/DataDog/zstd"
-	"github.com/miku/clam"
 	"github.com/miku/parallel"
 	"github.com/miku/skate"
 )
 
 var (
-	keyFuncName    = flag.String("f", "tsand", "key function name")
-	numWorkers     = flag.Int("w", runtime.NumCPU(), "number of workers")
-	batchSize      = flag.Int("b", 50000, "batch size")
-	outputFilename = flag.String("o", "", "output filename")
+	keyFuncName     = flag.String("f", "tsand", "key function name")
+	numWorkers      = flag.Int("w", runtime.NumCPU(), "number of workers")
+	batchSize       = flag.Int("b", 50000, "batch size")
+	outputFilename  = flag.String("o", "", "output filename")
+	compressProgram = flag.String("compress-program", "zstd", "compress program")
 
 	wsReplacer = strings.NewReplacer("\t", "", "\n", "")
 	keyOpts    = map[string]skate.IdentifierKeyFunc{
@@ -46,29 +45,21 @@ func main() {
 	if keyFunc, ok = keyOpts[*keyFuncName]; !ok {
 		log.Fatal("invalid key func")
 	}
-	f, err := ioutil.TempFile("", "skate-sorted-keys-")
-	if err != nil {
-		log.Fatal(err)
-	}
-	zf := zstd.NewWriterLevel(f, 9)
-	defer func() {
-		if err := zf.Close(); err != nil {
-			log.Fatal(err)
-		}
-		output, err := clam.RunOutput("zstdcat -T0 {input} | LC_ALL=C sort -k2,2 | zstd -c9 > {output}",
-			clam.Map{"input": f.Name()})
+	if *outputFilename == "" {
+		f, err := ioutil.TempFile("", "skate-sorted-keys-")
 		if err != nil {
 			log.Fatal(err)
 		}
-		if *outputFilename != "" {
-			if err := os.Rename(output, *outputFilename); err != nil {
-				log.Fatal(err)
-			}
-		} else {
-			log.Println(output)
-		}
-	}()
-	pp := parallel.NewProcessor(os.Stdin, zf, func(p []byte) ([]byte, error) {
+		outputFilename = f.Name()
+	}
+	command := fmt.Sprintf("LC_ALL=C sort -k2,2 --compress-program %s | %s -c9 > %s", *compressProgram, *compressProgram, *outputFilename)
+	cmd := exec.Command("bash", "-c", command)
+	w, err := cmd.StdinPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer w.Close()
+	pp := parallel.NewProcessor(os.Stdin, w, func(p []byte) ([]byte, error) {
 		ident, key, err := keyFunc(p)
 		if err != nil {
 			return nil, err
