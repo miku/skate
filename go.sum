@@ -18,6 +18,8 @@ github.com/miku/clam v0.0.0-20150701134247-8054bf3dfcec h1:vr8JzJrD1+/op4CeQYxB9
 github.com/miku/clam v0.0.0-20150701134247-8054bf3dfcec/go.mod h1:xYhPJ/998ljBsXWWkLIczOFg+IzuUWphuP2e2tsdMN0=
 github.com/miku/parallel v0.0.0-20190514155252-d289185a944b h1:O68zLMmi8g7xdZRgPpDyCJOL4A7JhlHrr0riETJa6lI=
 github.com/miku/parallel v0.0.0-20190514155252-d289185a944b/go.mod h1:m4hVixrXwk3DUp5cQ1j661BsHpjqSc/SfXE0uUMxmAw=
+github.com/miku/parallel v0.0.0-20210205190127-d1fa15dcea0c h1:w1k+oAL6cD9oNI2LXgyCHXKJzgD7WXn/09+cdkMgZJ4=
+github.com/miku/parallel v0.0.0-20210205190127-d1fa15dcea0c/go.mod h1:m4hVixrXwk3DUp5cQ1j661BsHpjqSc/SfXE0uUMxmAw=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 h1:ZqeYNhU3OHLH3mGKHDcjJRFFRrJa6eAM5H+CtDdOsPc=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742 h1:Esafd1046DLDQ0W1YjYsBW+p8U2u7vzgW2SQVmlNazg=

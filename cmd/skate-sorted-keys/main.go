@@ -33,6 +33,7 @@ var (
 	numWorkers      = flag.Int("w", runtime.NumCPU(), "number of workers")
 	batchSize       = flag.Int("b", 50000, "batch size")
 	compressProgram = flag.String("compress-program", "zstd", "compress program, passed to sort")
+	verbose         = flag.Bool("verbose", false, "show progress")
 
 	wsReplacer = strings.NewReplacer("\t", "", "\n", "")
 	keyOpts    = map[string]skate.IdentifierKeyFunc{
@@ -78,6 +79,7 @@ func main() {
 	})
 	pp.NumWorkers = *numWorkers
 	pp.BatchSize = *batchSize
+	pp.LogEvery = 1000000
 	if err := pp.Run(); err != nil {
 		log.Fatal(err)
 	}
