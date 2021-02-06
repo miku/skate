@@ -117,3 +117,12 @@ Usage of skate-cluster:
 * key extraction at about 40k/s, 2B docs would take 13h
 * having pipes in Go, on the shell or not at all seems to make little difference
 * using jsoniter, parallel decode is at around 50MB/s
+
+Note: need to debug performance at some point; e.g.
+
+```
+$ zstdcat -T0 refs_titles.tsv.zst | TMPDIR=/fast/tmp LC_ALL=C sort -S20% | \
+    LC_ALL=C uniq -c | zstd -c9 > refs_titles_unique.tsv.zst
+```
+
+takes 46min, and we can iterate of 2-5M lines/s.
