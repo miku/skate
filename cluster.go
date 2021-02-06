@@ -1,10 +1,10 @@
 package skate
 
 import (
-	"encoding/json"
 	"regexp"
 	"strings"
 
+	jsoniter "github.com/json-iterator/go"
 	"golang.org/x/text/unicode/norm"
 )
 
@@ -12,6 +12,7 @@ import (
 type IdentifierKeyFunc func([]byte) (string, string, error)
 
 var (
+	json       = jsoniter.ConfigCompatibleWithStandardLibrary
 	wsReplacer = strings.NewReplacer("\t", " ", "\n", " ")
 	repeatedWs = regexp.MustCompile(`[ ]{2,}`)
 	nonWord    = regexp.MustCompile(`[\W]+`)
