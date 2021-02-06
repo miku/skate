@@ -4,8 +4,8 @@ Fast sorted key extraction and extra utilities.
 
 ## Problem
 
-Handling a TB of JSON without big data tooling. Especially the following use
-case:
+Handling a TB of JSON and billions of documents without big data tooling;
+especially the following use case:
 
 * deriving a key from a document
 * sort documents by (that) key
@@ -111,3 +111,8 @@ Usage of skate-cluster:
   -k int
         which column contains the key (one based) (default 2)
 ```
+
+## Performance notes
+
+* key extraction at about 40k/s, 2B docs would take 13h
+* having pipes in Go, on the shell or not at all seems to make little difference
