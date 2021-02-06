@@ -126,3 +126,8 @@ $ zstdcat -T0 refs_titles.tsv.zst | TMPDIR=/fast/tmp LC_ALL=C sort -S20% | \
 ```
 
 takes 46min, and we can iterate of 2-5M lines/s.
+
+## Misc
+
+The `skate-ref-to-release` command is a simple one-off schema converter (mostly
+decode and encode), which runs over ~1.7B docs in 81min - about 349794 docs/s.
