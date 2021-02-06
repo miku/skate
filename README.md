@@ -53,3 +53,61 @@ Usage of skate-sorted-keys:
   -w int
         number of workers (default 8)
 ```
+
+Clusters are json lines;
+
+* a single string as key `k`
+* a list of documents as values `v`
+
+The reason to include the complete documents is performance - for simplicity
+and (typically) sequential reads, a "file" seems to be a good option.
+
+```json
+{
+  "k": "植字手引",
+  "v": [
+    {
+      "abstracts": [],
+      "refs": [],
+      "contribs": [
+        {
+          "index": 0,
+          "raw_name": "大久保, 猛雄",
+          "given_name": "大久保, 猛雄",
+          "role": "author"
+        }
+      ],
+      "language": "ja",
+      "publisher": "広島植字研究会",
+      "ext_ids": {
+        "doi": "10.11501/1189671"
+      },
+      "release_year": 1929,
+      "release_stage": "published",
+      "release_type": "article-journal",
+      "webcaptures": [],
+      "filesets": [],
+      "files": [],
+      "work_id": "aaaab7poljf25dg4322ebsgism",
+      "title": "植字手引",
+      "state": "active",
+      "ident": "bc5mykteevcy3masrst3zjqgwq",
+      "revision": "97846ea8-41e5-40aa-9d41-e8c4b45f67e4",
+      "extra": {
+        "jalc": {}
+      }
+    }
+  ]
+}
+```
+
+Options:
+
+```
+$ skate-cluster -h
+Usage of skate-cluster:
+  -d int
+        which column contains the doc (default 3)
+  -k int
+        which column contains the key (one based) (default 2)
+```
