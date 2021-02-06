@@ -40,6 +40,7 @@ var (
 	batchSize       = flag.Int("b", 50000, "batch size")
 	compressProgram = flag.String("compress-program", "zstd", "compress program, passed to sort")
 	verbose         = flag.Bool("verbose", false, "show progress")
+	tmpDir          = flag.String("T", os.TempDir(), "temp dir to use")
 	skipSort        = flag.Bool("S", false, "skip sorting")
 
 	wsReplacer = strings.NewReplacer("\t", "", "\n", "")
@@ -67,7 +68,7 @@ func main() {
 		done = make(chan bool) // used for pipe
 	)
 	if !*skipSort {
-		command := fmt.Sprintf("LC_ALL=C sort -k2,2 --compress-program %s", *compressProgram)
+		command := fmt.Sprintf("LC_ALL=C sort -k2,2 -T %s --compress-program %s", *tmpDir, *compressProgram)
 		cmd := exec.Command("bash", "-c", command)
 		cmd.Stderr = os.Stderr
 		cmd.Stdout = os.Stdout
