@@ -11,9 +11,6 @@ import (
 	"time"
 )
 
-// Version of library.
-const Version = "0.1.0"
-
 // BytesBatch is a slice of byte slices.
 type BytesBatch struct {
 	b [][]byte
@@ -53,21 +50,6 @@ func (bb *BytesBatch) Slice() [][]byte {
 	return b
 }
 
-// SimpleTransformerFunc converts bytes to bytes.
-type SimpleTransformerFunc func([]byte) []byte
-
-// TransformerFunc takes a slice of bytes and returns a slice of bytes and a
-// an error. A common denominator of functions that transform data.
-type TransformerFunc func([]byte) ([]byte, error)
-
-// ToTransformerFunc takes a simple transformer and wraps it so it can be used in
-// places where a TransformerFunc is expected.
-func ToTransformerFunc(f SimpleTransformerFunc) TransformerFunc {
-	return func(b []byte) ([]byte, error) {
-		return f(b), nil
-	}
-}
-
 // Processor can process lines in parallel.
 type Processor struct {
 	BatchSize       int
@@ -77,11 +59,11 @@ type Processor struct {
 	Verbose         bool
 	r               io.Reader
 	w               io.Writer
-	f               TransformerFunc
+	f               func([]byte) ([]byte, error)
 }
 
 // NewProcessor creates a new line processor.
-func NewProcessor(r io.Reader, w io.Writer, f TransformerFunc) *Processor {
+func NewProcessor(r io.Reader, w io.Writer, f func([]byte) ([]byte, error)) *Processor {
 	return &Processor{
 		BatchSize:       10000,
 		RecordSeparator: '\n',
@@ -101,14 +83,12 @@ func (p *Processor) RunWorkers(numWorkers int) error {
 
 // Run starts the workers, crunching through the input.
 func (p *Processor) Run() error {
-
 	// wErr signals a worker or writer error. If an error occurs, the items in
 	// the queue are still process, just no items are added to the queue. There
 	// is only one way to toggle this, from false to true, so we don't care
-	// about synchronisation.
+	// about race conditions here.
 	var wErr error
 
-	// worker takes []byte batches from a channel queue, executes f and sends the result to the out channel.
 	worker := func(queue chan [][]byte, out chan []byte, f TransformerFunc, wg *sync.WaitGroup) {
 		defer wg.Done()
 		for batch := range queue {
@@ -121,8 +101,6 @@ func (p *Processor) Run() error {
 			}
 		}
 	}
-
-	// writer buffers writes.
 	writer := func(w io.Writer, bc chan []byte, done chan bool) {
 		bw := bufio.NewWriter(w)
 		for b := range bc {
@@ -141,20 +119,15 @@ func (p *Processor) Run() error {
 		done    = make(chan bool)
 		total   int64
 		started = time.Now()
+		wg      sync.WaitGroup
+		batch   = NewBytesBatchCapacity(p.BatchSize)
+		br      = bufio.NewReader(p.r)
 	)
-
-	var wg sync.WaitGroup
-
 	go writer(p.w, out, done)
-
 	for i := 0; i < p.NumWorkers; i++ {
 		wg.Add(1)
 		go worker(queue, out, p.f, &wg)
 	}
-
-	batch := NewBytesBatchCapacity(p.BatchSize)
-	br := bufio.NewReader(p.r)
-
 	for {
 		b, err := br.ReadBytes(p.RecordSeparator)
 		if err == io.EOF {
@@ -168,9 +141,6 @@ func (p *Processor) Run() error {
 		}
 		batch.Add(b)
 		if batch.Size() == p.BatchSize {
-			if p.Verbose {
-				log.Printf("parallel: dispatched %d lines (%0.2f lines/s)", total, float64(total)/time.Since(started).Seconds())
-			}
 			total += int64(p.BatchSize)
 			// To avoid checking on each loop, we only check for worker or write errors here.
 			if wErr != nil {
@@ -178,9 +148,11 @@ func (p *Processor) Run() error {
 			}
 			queue <- batch.Slice()
 			batch.Reset()
+			if p.Verbose {
+				log.Printf("dispatched %d lines (%0.2f lines/s)", total, float64(total)/time.Since(started).Seconds())
+			}
 		}
 	}
-
 	queue <- batch.Slice()
 	batch.Reset()
 
