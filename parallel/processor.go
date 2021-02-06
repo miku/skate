@@ -89,7 +89,7 @@ func (p *Processor) Run() error {
 	// about race conditions here.
 	var wErr error
 
-	worker := func(queue chan [][]byte, out chan []byte, f TransformerFunc, wg *sync.WaitGroup) {
+	worker := func(queue chan [][]byte, out chan []byte, f func([]byte) ([]byte, error), wg *sync.WaitGroup) {
 		defer wg.Done()
 		for batch := range queue {
 			for _, b := range batch {
