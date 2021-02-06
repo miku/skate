@@ -116,3 +116,4 @@ Usage of skate-cluster:
 
 * key extraction at about 40k/s, 2B docs would take 13h
 * having pipes in Go, on the shell or not at all seems to make little difference
+* using jsoniter, parallel decode is at around 50MB/s
