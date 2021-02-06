@@ -35,7 +35,7 @@ import (
 )
 
 var (
-	keyFuncName     = flag.String("f", "tsand", "key function name")
+	keyFuncName     = flag.String("f", "tsand", "key function name, other: title, tnorm, tnysi")
 	numWorkers      = flag.Int("w", runtime.NumCPU(), "number of workers")
 	batchSize       = flag.Int("b", 50000, "batch size")
 	compressProgram = flag.String("compress-program", "zstd", "compress program, passed to sort")
