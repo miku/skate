@@ -16,6 +16,7 @@ import (
 var (
 	keyField = flag.Int("k", 2, "which column contains the key (one based)")
 	docField = flag.Int("d", 3, "which column contains the doc")
+	// XXX: add max cluster size
 )
 
 func main() {
