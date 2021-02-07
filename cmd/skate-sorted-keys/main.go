@@ -38,7 +38,7 @@ var (
 	keyFuncName     = flag.String("f", "tsand", "key function name, other: title, tnorm, tnysi")
 	numWorkers      = flag.Int("w", runtime.NumCPU(), "number of workers")
 	batchSize       = flag.Int("b", 50000, "batch size")
-	compressProgram = flag.String("compress-program", "zstd -T0", "compress program, passed to sort")
+	compressProgram = flag.String("compress-program", "pzstd", "compress program name (only), passed to sort")
 	verbose         = flag.Bool("verbose", false, "show progress")
 	tmpDir          = flag.String("T", os.TempDir(), "temp dir to use")
 	skipSort        = flag.Bool("S", false, "skip sorting")
@@ -70,6 +70,9 @@ func main() {
 	if !*skipSort {
 		command := fmt.Sprintf("LC_ALL=C sort -k2,2 -T %q --compress-program %q", *tmpDir, *compressProgram)
 		cmd := exec.Command("bash", "-c", command)
+		if *verbose {
+			log.Println(cmd.String())
+		}
 		cmd.Stderr = os.Stderr
 		cmd.Stdout = os.Stdout
 		w, err = cmd.StdinPipe() // Pipe in our release entities.
