@@ -39,6 +39,7 @@ var (
 	numWorkers      = flag.Int("w", runtime.NumCPU(), "number of workers")
 	batchSize       = flag.Int("b", 50000, "batch size")
 	compressProgram = flag.String("compress-program", "pzstd", "compress program name (only), passed to sort")
+	sortBuffer      = flag.String("S", "30%", "sort -S")
 	verbose         = flag.Bool("verbose", false, "show progress")
 	tmpDir          = flag.String("T", os.TempDir(), "temp dir to use")
 	skipSort        = flag.Bool("S", false, "skip sorting")
@@ -68,7 +69,7 @@ func main() {
 		done = make(chan bool) // used for pipe
 	)
 	if !*skipSort {
-		command := fmt.Sprintf("LC_ALL=C sort -k2,2 -T %q --compress-program %q", *tmpDir, *compressProgram)
+		command := fmt.Sprintf("LC_ALL=C sort -S %s -k2,2 -T %q --compress-program %q", *sortBuffer, *tmpDir, *compressProgram)
 		cmd := exec.Command("bash", "-c", command)
 		if *verbose {
 			log.Println(cmd.String())
