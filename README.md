@@ -10,7 +10,7 @@ especially the following use case:
 * deriving a key from a document
 * sort documents by (that) key
 
-One use case is match candidate generation for deduplication.
+One use case is match candidate generation for fuzzy matching.
 
 ## Transformation
 
@@ -33,21 +33,18 @@ clusters (not a problem of parallel, but our code, but still).
 ## Usage
 
 ```
-$ skate-sorted-keys < release_entities.jsonl | skate-cluster > cluster.jsonl
+$ skate-derive-key < release_entities.jsonl | sort -k2,2 | skate-cluster > cluster.jsonl
 ```
 
 A few options:
 
 ```
-$ skate-sorted-keys -h
-Usage of skate-sorted-keys:
-  -S    skip sorting
+$ skate-derive-key -h
+Usage of skate-derive-key:
   -b int
         batch size (default 50000)
-  -compress-program string
-        compress program, passed to sort (default "zstd")
   -f string
-        key function name (default "tsand")
+        key function name, other: title, tnorm, tnysi (default "tsand")
   -verbose
         show progress
   -w int
@@ -114,9 +111,9 @@ Usage of skate-cluster:
 
 ## Performance notes
 
-* key extraction at about 40k/s, 2B docs would take 13h
+* key extraction with parallel jsoniter at about 130MB/s
 * having pipes in Go, on the shell or not at all seems to make little difference
-* using jsoniter, parallel decode is at around 50MB/s
+* having a large sort buffer is key, then using pipes, the default is 1K
 
 Note: need to debug performance at some point; e.g.
 
