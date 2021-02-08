@@ -42,7 +42,7 @@ var (
 	sortBuffer      = flag.String("S", "30%", "sort -S")
 	verbose         = flag.Bool("verbose", false, "show progress")
 	tmpDir          = flag.String("T", os.TempDir(), "temp dir to use")
-	skipSort        = flag.Bool("S", false, "skip sorting")
+	skipSort        = flag.Bool("P", false, "skip sorting")
 
 	wsReplacer = strings.NewReplacer("\t", "", "\n", "")
 	keyOpts    = map[string]skate.IdentifierKeyFunc{
