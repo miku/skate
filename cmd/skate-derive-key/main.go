@@ -38,6 +38,7 @@ var (
 	numWorkers  = flag.Int("w", runtime.NumCPU(), "number of workers")
 	batchSize   = flag.Int("b", 50000, "batch size")
 	verbose     = flag.Bool("verbose", false, "show progress")
+	bestEffort  = flag.Bool("B", false, "best effort")
 
 	wsReplacer = strings.NewReplacer("\t", "", "\n", "")
 	keyOpts    = map[string]skate.IdentifierKeyFunc{
@@ -60,6 +61,10 @@ func main() {
 	pp := parallel.NewProcessor(os.Stdin, bw, func(p []byte) ([]byte, error) {
 		ident, key, err := keyFunc(p)
 		if err != nil {
+			if *bestEffort {
+				log.Printf("keyFunc failed with %v: %v", err, string(p))
+				return nil, nil
+			}
 			return nil, err
 		}
 		ident, key = strings.TrimSpace(ident), strings.TrimSpace(key)
