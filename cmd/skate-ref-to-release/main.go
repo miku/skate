@@ -11,13 +11,14 @@ import (
 	"github.com/miku/parallel"
 	"github.com/miku/skate"
 
-	json "github.com/goccy/go-json"
+	jsoniter "github.com/json-iterator/go"
 )
 
 var (
 	numWorkers = flag.Int("w", runtime.NumCPU(), "number of workers")
 	batchSize  = flag.Int("b", 100000, "batch size")
 
+	json         = jsoniter.ConfigCompatibleWithStandardLibrary
 	bytesNewline = []byte("\n")
 )
 

@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	json "github.com/goccy/go-json"
+	jsoniter "github.com/json-iterator/go"
 	"golang.org/x/text/unicode/norm"
 )
 
@@ -12,6 +12,7 @@ import (
 type IdentifierKeyFunc func([]byte) (string, string, error)
 
 var (
+	json       = jsoniter.ConfigCompatibleWithStandardLibrary
 	wsReplacer = strings.NewReplacer("\t", " ", "\n", " ")
 	repeatedWs = regexp.MustCompile(`[ ]{2,}`)
 	nonWord    = regexp.MustCompile(`[\W]+`)
