@@ -57,12 +57,14 @@ func main() {
 	if keyFunc, ok = keyOpts[*keyFuncName]; !ok {
 		log.Fatal("invalid key func")
 	}
-	f, err := os.OpenFile(*logFile, os.O_CREATE|os.O_APPEND, 0644)
-	if err != nil {
-		log.Fatal(err)
+	if *logFile != "" {
+		f, err := os.OpenFile(*logFile, os.O_CREATE|os.O_APPEND, 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+		log.SetOutput(f)
 	}
-	defer f.Close()
-	log.SetOutput(f)
 	bw := bufio.NewWriter(os.Stdout)
 	defer bw.Flush()
 	pp := parallel.NewProcessor(os.Stdin, bw, func(p []byte) ([]byte, error) {
