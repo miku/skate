@@ -39,6 +39,7 @@ var (
 	batchSize   = flag.Int("b", 50000, "batch size")
 	verbose     = flag.Bool("verbose", false, "show progress")
 	bestEffort  = flag.Bool("B", false, "best effort")
+	logFile     = flag.String("log", "", "log filename")
 
 	wsReplacer = strings.NewReplacer("\t", "", "\n", "")
 	keyOpts    = map[string]skate.IdentifierKeyFunc{
@@ -56,6 +57,12 @@ func main() {
 	if keyFunc, ok = keyOpts[*keyFuncName]; !ok {
 		log.Fatal("invalid key func")
 	}
+	f, err := os.OpenFile(*logFile, os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+	log.SetOutput(f)
 	bw := bufio.NewWriter(os.Stdout)
 	defer bw.Flush()
 	pp := parallel.NewProcessor(os.Stdin, bw, func(p []byte) ([]byte, error) {
