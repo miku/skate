@@ -28,6 +28,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"sync/atomic"
 
 	"github.com/miku/skate"
 	"github.com/miku/skate/parallel"
@@ -48,8 +49,10 @@ var (
 		"tnysi": skate.KeyTitleNysiis,
 		"tsand": skate.KeyTitleSandcrawler,
 	}
-	keyFunc skate.IdentifierKeyFunc
-	ok      bool
+	keyFunc           skate.IdentifierKeyFunc
+	ok                bool
+	counterEmptyKey   uint64
+	counterEmptyIdent uint64
 )
 
 func main() {
@@ -77,8 +80,12 @@ func main() {
 			return nil, err
 		}
 		ident, key = strings.TrimSpace(ident), strings.TrimSpace(key)
-		if ident == "" || key == "" {
-			log.Printf("skipping empty ident (%s) or key (%s)", ident, key)
+		if key == "" {
+			atomic.AddUint64(&counterEmptyKey, 1)
+			return nil, nil
+		}
+		if ident == "" {
+			atomic.AddUint64(&counterEmptyIdent, 1)
 			return nil, nil
 		}
 		v := fmt.Sprintf("%s\t%s\t%s\n", ident, key, wsReplacer.Replace(string(p)))
@@ -87,7 +94,12 @@ func main() {
 	pp.NumWorkers = *numWorkers
 	pp.BatchSize = *batchSize
 	pp.Verbose = *verbose
+	pp.LogFunc = func() {
+		log.Printf("empty keys/idents: %d/%d", counterEmptyKey, counterEmptyIdent)
+	}
 	if err := pp.Run(); err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("docs with empty keys skipped: %d", counterEmptyKey)
+	log.Printf("docs with empty ident skipped: %d", counterEmptyIdent)
 }

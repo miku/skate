@@ -57,6 +57,7 @@ type Processor struct {
 	NumWorkers      int
 	SkipEmptyLines  bool
 	Verbose         bool
+	LogFunc         func()
 	r               io.Reader
 	w               io.Writer
 	f               func([]byte) ([]byte, error)
@@ -150,6 +151,7 @@ func (p *Processor) Run() error {
 			batch.Reset()
 			if p.Verbose {
 				log.Printf("dispatched %d lines (%0.2f lines/s)", total, float64(total)/time.Since(started).Seconds())
+				p.LogFunc()
 			}
 		}
 	}

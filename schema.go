@@ -94,3 +94,27 @@ type Release struct {
 		} `json:"skate,omitempty"`
 	} `json:"extra,omitempty"`
 }
+
+// BiblioRef as a prototype for indexing.
+type BiblioRef struct {
+	Key                    string `json:"_key,omitempty"`
+	UpdateTs               string `json:"update_ts,omitempty"`
+	SourceReleaseIdent     string `json:"source_release_ident,omitempty"`
+	SourceWorkIdent        string `json:"source_work_ident,omitempty"`
+	SourceWikipediaArticle string `json:"source_wikipedia_article,omitempty"`
+	SourceReleaseStage     string `json:"source_release_stage,omitempty"`
+	SourceYear             string `json:"source_year,omitempty"`
+	RefIndex               int    `json:"ref_index,omitempty"`
+	RefKey                 string `json:"ref_key,omitempty"`
+	RefLocator             string `json:"ref_locator,omitempty"`
+	TargetReleaseIdent     string `json:"target_release_ident"`
+	TargetWorkIdent        string `json:"target_work_ident"`
+	TargetOpenLibraryWork  string `json:"target_openlibrary_work"`
+	TargetURLSurt          string `json:"target_url_surt"`
+	TargetURL              string `json:"target_url"`
+	MatchProvenance        string `json:"match_provenance"`
+	MatchStatus            string `json:"match_status"`
+	MatchReason            string `json:"match_reason"`
+	TargetUnstructured     string `json:"target_unstructured"`
+	TargetCSL              string `json:"target_csl"`
+}
