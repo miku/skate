@@ -62,6 +62,11 @@ func main() {
 		if err != nil {
 			return nil, err
 		}
+		ident, key = strings.TrimSpace(ident), strings.TrimSpace(key)
+		if ident == "" || key == "" {
+			log.Printf("skipping empty ident (%s) or key (%s)", ident, key)
+			return nil, nil
+		}
 		v := fmt.Sprintf("%s\t%s\t%s\n", ident, key, wsReplacer.Replace(string(p)))
 		return []byte(v), nil
 	})

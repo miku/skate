@@ -2,13 +2,14 @@ package skate
 
 import "strconv"
 
-// RefToRelease converts a ref to a release.
+// RefToRelease converts a ref to a release. Set a extra.skate.status flag to
+// be able to distinguish coverted entities later.
 func RefToRelease(ref *Ref) (*Release, error) {
 	var (
 		release  Release
 		b        = ref.Biblio
 		contribs = make([]struct {
-			Index   int64  `json:"index,omitempty"`
+			Index   int    `json:"index,omitempty"`
 			RawName string `json:"raw_name,omitempty"`
 			Role    string `json:"role,omitempty"`
 		}, len(b.ContribRawNames))
@@ -27,6 +28,7 @@ func RefToRelease(ref *Ref) (*Release, error) {
 	release.Pages = b.Pages
 	release.ReleaseYear = strconv.Itoa(ref.ReleaseYear)
 	for i, name := range b.ContribRawNames {
+		contribs[i].Index = i
 		contribs[i].RawName = name
 	}
 	release.Contribs = contribs
@@ -63,7 +65,7 @@ type Ref struct {
 type Release struct {
 	ContainerName string `json:"container_name,omitempty"`
 	Contribs      []struct {
-		Index   int64  `json:"index,omitempty"`
+		Index   int    `json:"index,omitempty"`
 		RawName string `json:"raw_name,omitempty"`
 		Role    string `json:"role,omitempty"`
 	} `json:"contribs,omitempty"`
@@ -85,4 +87,10 @@ type Release struct {
 	Pages       string `json:"pages,omitempty"`
 	Title       string `json:"title,omitempty"`
 	WorkID      string `json:"work_id,omitempty"`
+	Extra       struct {
+		Skate struct {
+			// Mark as converted.
+			Status string `json:"status,omitempty"`
+		} `json:"skate,omitempty"`
+	} `json:"extra,omitempty"`
 }

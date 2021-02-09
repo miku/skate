@@ -88,7 +88,7 @@ func KeyTitleNormalized(p []byte) (ident string, key string, err error) {
 	key = strings.ToLower(key)
 	key = repeatedWs.ReplaceAllString(key, " ")
 	key = nonWord.ReplaceAllString(key, "")
-	return ident, key, err
+	return ident, key, nil
 }
 
 // KeyTitleNysiis returns the New York State Identification and Intelligence
@@ -107,7 +107,7 @@ func KeyTitleSandcrawler(p []byte) (ident string, key string, err error) {
 	if err != nil {
 		return
 	}
-	return ident, sandcrawlerSlugify(key), err
+	return ident, sandcrawlerSlugify(key), nil
 }
 
 func sandcrawlerSlugify(s string) string {
