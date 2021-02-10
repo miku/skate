@@ -29,6 +29,7 @@ import (
 	"runtime"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"github.com/miku/skate"
 	"github.com/miku/skate/parallel"
@@ -70,6 +71,7 @@ func main() {
 	}
 	bw := bufio.NewWriter(os.Stdout)
 	defer bw.Flush()
+	started := time.Now()
 	pp := parallel.NewProcessor(os.Stdin, bw, func(p []byte) ([]byte, error) {
 		ident, key, err := keyFunc(p)
 		if err != nil {
@@ -100,6 +102,5 @@ func main() {
 	if err := pp.Run(); err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("docs with empty keys skipped: %d", counterEmptyKey)
-	log.Printf("docs with empty ident skipped: %d", counterEmptyIdent)
+	log.Printf("took: %s, docs with empty keys/ident skipped: %d/%d", time.Since(started), counterEmptyKey, counterEmptyIdent)
 }
