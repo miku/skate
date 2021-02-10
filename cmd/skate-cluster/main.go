@@ -1,5 +1,5 @@
 // skate-cluster takes the output of skate-sorted-keys and generates a
-// "cluster" document.
+// "cluster" document, grouping docs by key.
 
 package main
 
@@ -14,9 +14,11 @@ import (
 )
 
 var (
-	keyField = flag.Int("k", 2, "which column contains the key (one based)")
-	docField = flag.Int("d", 3, "which column contains the doc")
-	// XXX: add max cluster size
+	keyField       = flag.Int("k", 2, "which column contains the key (one based)")
+	docField       = flag.Int("d", 3, "which column contains the doc")
+	minClusterSize = flag.Int("min", 2, "minimum cluster size")
+	maxClusterSize = flag.Int("max", 100000, "maximum cluster size")
+	requireBoth    = flag.Bool("both", false, "require at least one ref and one non-ref item present in the cluster")
 )
 
 func main() {
@@ -56,8 +58,22 @@ func main() {
 	}
 }
 
+// containsBoth return true, if we have a ref and a non-ref item in the batch.
+func containsBoth(batch []string) bool {
+	var isRef int
+	for _, doc := range batch {
+		if strings.Contains(doc, `"extra":{"skate":{"status":"ref"}}}`) {
+			isRef++
+		}
+	}
+	return isRef < len(batch)
+}
+
 func writeBatch(w io.Writer, key string, batch []string) (err error) {
-	if len(batch) == 0 {
+	if len(batch) < *minClusterSize || len(batch) > *maxClusterSize {
+		return nil
+	}
+	if *requireBoth && !containsBoth(batch) {
 		return nil
 	}
 	// ugly, but faster
