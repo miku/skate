@@ -12,6 +12,8 @@ especially the following use case:
 
 One use case is match candidate generation for fuzzy matching.
 
+![](static/two_cluster_synopsis.png)
+
 ## Transformation
 
 We take jsonlines as input and extract id and derive the key. The resulting

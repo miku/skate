@@ -62,6 +62,7 @@ func main() {
 func containsBoth(batch []string) bool {
 	var isRef int
 	for _, doc := range batch {
+		// "ugly, but faster"
 		if strings.Contains(doc, `"extra":{"skate":{"status":"ref"}}}`) {
 			isRef++
 		}
@@ -76,7 +77,7 @@ func writeBatch(w io.Writer, key string, batch []string) (err error) {
 	if *requireBoth && !containsBoth(batch) {
 		return nil
 	}
-	// ugly, but faster
+	// "ugly, but faster"
 	_, err = fmt.Fprintf(w, "{\"k\": \"%s\", \"v\": [%s]}\n",
 		key, strings.Join(batch, ","))
 	return
