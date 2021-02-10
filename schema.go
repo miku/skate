@@ -107,14 +107,14 @@ type BiblioRef struct {
 	RefIndex               int    `json:"ref_index,omitempty"`
 	RefKey                 string `json:"ref_key,omitempty"`
 	RefLocator             string `json:"ref_locator,omitempty"`
-	TargetReleaseIdent     string `json:"target_release_ident"`
-	TargetWorkIdent        string `json:"target_work_ident"`
-	TargetOpenLibraryWork  string `json:"target_openlibrary_work"`
-	TargetURLSurt          string `json:"target_url_surt"`
-	TargetURL              string `json:"target_url"`
-	MatchProvenance        string `json:"match_provenance"`
-	MatchStatus            string `json:"match_status"`
-	MatchReason            string `json:"match_reason"`
-	TargetUnstructured     string `json:"target_unstructured"`
-	TargetCSL              string `json:"target_csl"`
+	TargetReleaseIdent     string `json:"target_release_ident,omitempty"`
+	TargetWorkIdent        string `json:"target_work_ident,omitempty"`
+	TargetOpenLibraryWork  string `json:"target_openlibrary_work,omitempty"`
+	TargetURLSurt          string `json:"target_url_surt,omitempty"`
+	TargetURL              string `json:"target_url,omitempty"`
+	MatchProvenance        string `json:"match_provenance,omitempty"`
+	MatchStatus            string `json:"match_status,omitempty"`
+	MatchReason            string `json:"match_reason,omitempty"`
+	TargetUnstructured     string `json:"target_unstructured,omitempty"`
+	TargetCSL              string `json:"target_csl,omitempty"`
 }
