@@ -44,7 +44,8 @@ func main() {
 		if len(fields) <= keyIndex || len(fields) <= docIndex {
 			log.Fatalf("line has only %d fields", len(fields))
 		}
-		key, doc := fields[keyIndex], fields[docIndex]
+		key := strings.TrimSpace(fields[keyIndex])
+		doc := strings.TrimSpace(fields[docIndex])
 		if prev != key {
 			if err := writeBatch(bw, key, batch); err != nil {
 				log.Fatal(err)
