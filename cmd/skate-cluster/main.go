@@ -66,7 +66,7 @@ func containsBoth(batch []string) bool {
 			isRef++
 		}
 	}
-	return isRef < len(batch)
+	return isRef > 0 && isRef < len(batch)
 }
 
 func writeBatch(w io.Writer, key string, batch []string) (err error) {
