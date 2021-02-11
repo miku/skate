@@ -15,6 +15,7 @@ import (
 var (
 	numWorkers = flag.Int("w", runtime.NumCPU(), "number of workers")
 	batchSize  = flag.Int("b", 100000, "batch size")
+	bestEffort = flag.Bool("B", false, "best effort, log errors")
 	mode       = flag.String("m", "", "what to extract")
 
 	json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -30,7 +31,11 @@ func main() {
 		f = func(p []byte) ([]byte, error) {
 			var cluster skate.Cluster
 			if err := json.Unmarshal(p, &cluster); err != nil {
-				return nil, err
+				if *bestEffort {
+					log.Printf("%v", err)
+					return nil, nil
+				}
+				log.Fatal(err)
 			}
 			var refs int
 			for _, v := range cluster.Values {
