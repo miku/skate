@@ -17,6 +17,7 @@
 /skate-ref-to-release
 /skate-derive-key
 /skate-cluster
+/skate-cluster-stats
 /skate-biblioref
 packaging/debian/skate/usr
 skate_*_amd64.deb

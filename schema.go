@@ -118,3 +118,9 @@ type BiblioRef struct {
 	TargetUnstructured     string `json:"target_unstructured,omitempty"`
 	TargetCSL              string `json:"target_csl,omitempty"`
 }
+
+// Cluster results.
+type Cluster struct {
+	Key    string    `json:"k"`
+	Values []Release `json:"v"`
+}
