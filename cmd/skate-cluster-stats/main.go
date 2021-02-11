@@ -7,7 +7,7 @@ import (
 	"os"
 	"runtime"
 
-	jsoniter "github.com/json-iterator/go"
+	"github.com/goccy/go-json"
 	"github.com/miku/skate"
 	"github.com/miku/skate/parallel"
 )
@@ -17,7 +17,7 @@ var (
 	batchSize  = flag.Int("b", 100000, "batch size")
 	mode       = flag.String("m", "", "what to extract")
 
-	json = jsoniter.ConfigCompatibleWithStandardLibrary
+	// json = jsoniter.ConfigCompatibleWithStandardLibrary
 )
 
 type Func func([]byte) ([]byte, error)
