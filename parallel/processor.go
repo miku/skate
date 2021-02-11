@@ -76,12 +76,6 @@ func NewProcessor(r io.Reader, w io.Writer, f func([]byte) ([]byte, error)) *Pro
 	}
 }
 
-// RunWorkers allows to quickly set the number of workers.
-func (p *Processor) RunWorkers(numWorkers int) error {
-	p.NumWorkers = numWorkers
-	return p.Run()
-}
-
 // Run starts the workers, crunching through the input.
 func (p *Processor) Run() error {
 	// wErr signals a worker or writer error. If an error occurs, the items in
@@ -143,15 +137,19 @@ func (p *Processor) Run() error {
 		batch.Add(b)
 		if batch.Size() == p.BatchSize {
 			total += int64(p.BatchSize)
-			// To avoid checking on each loop, we only check for worker or write errors here.
+			// To avoid checking on each loop, we only check for worker or
+			// write errors here.
 			if wErr != nil {
 				break
 			}
 			queue <- batch.Slice()
 			batch.Reset()
 			if p.Verbose {
-				log.Printf("dispatched %d lines (%0.2f lines/s)", total, float64(total)/time.Since(started).Seconds())
-				p.LogFunc()
+				log.Printf("dispatched %d lines (%0.2f lines/s)",
+					total, float64(total)/time.Since(started).Seconds())
+				if p.LogFunc != nil {
+					p.LogFunc()
+				}
 			}
 		}
 	}
