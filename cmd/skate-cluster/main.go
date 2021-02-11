@@ -1,6 +1,5 @@
 // skate-cluster takes the output of skate-sorted-keys and generates a
-// "cluster" document, grouping docs by key.
-
+// "cluster" document, grouping docs by key. Can do some pre-filtering.
 package main
 
 import (
@@ -18,7 +17,8 @@ var (
 	docField       = flag.Int("d", 3, "which column contains the doc")
 	minClusterSize = flag.Int("min", 2, "minimum cluster size")
 	maxClusterSize = flag.Int("max", 100000, "maximum cluster size")
-	requireBoth    = flag.Bool("both", false, "require at least one ref and one non-ref item present in the cluster")
+	requireBoth    = flag.Bool("both", false,
+		"require at least one ref and one non-ref item present in the cluster, implies -min 2")
 )
 
 func main() {
@@ -79,7 +79,6 @@ func writeBatch(w io.Writer, key string, batch []string) (err error) {
 		return nil
 	}
 	// "ugly, but faster"
-	_, err = fmt.Fprintf(w, "{\"k\": \"%s\", \"v\": [%s]}\n",
-		key, strings.Join(batch, ","))
+	_, err = fmt.Fprintf(w, "{\"k\": \"%s\", \"v\": [%s]}\n", key, strings.Join(batch, ","))
 	return
 }

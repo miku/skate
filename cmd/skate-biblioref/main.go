@@ -1,7 +1,7 @@
 // Experimental: Turn the minimal cluster result (key, target, source) into an
-// indexable biblio ref.
+// indexable biblio ref (10eb30251f89806cb7a0f147f427c5ea7e5f9941).
 //
-// --- id, title, ... ---- --------- target --------- ------- source -----------
+// ---- id, title, ... --- ---- target -------------- ---- source --------------
 //
 // 10.1001/2012.jama.11164 zhscs2mjlvcdte2i3j44ibgzae icg7bkoeqvfqnc5t5ot4evto6a
 // 10.1001/2012.jama.11164 zhscs2mjlvcdte2i3j44ibgzae ichuaiowbvbx5ajae5ing27lka

@@ -1,8 +1,10 @@
-// skate-derive-key derives a key from JSON documents.
+// skate-derive-key derives a key from release entity JSON documents.
 //
-// $ zstdcat release_export_expanded.json.zst | skate-derive | zstd -c > keydocs.tsv
+// $ skate-derive-key < release_entities.jsonlines > docs.tsv
 //
-// Result will be a three column TSV (ident, key, doc), sorted (LC_ALL=C) by key.
+// Result will be a three column TSV (ident, key, doc), LC_ALL=C sorted by key.
+//
+// ---- ident ---------------    ---- key ------------------------------     ---- doc ----------
 //
 // 4lzgf5wzljcptlebhyobccj7ru    2568diamagneticsusceptibilityofh8n2o10sr    {"abstracts":[],...
 //
@@ -14,21 +16,16 @@
 // extraction only; using zstd -T0, we get 21K docs/s; about 13K docs/s; about
 // 32h for 1.5B records.
 //
-// On a 16-core box. About 40K sustained extraction, w/o sorting; sort very low
-// CPU, down to 5%, even on /fast disk. 10M entries takes very long to sort
-// (did not finish after 30min). Trying 2-step, "extract-sort"; 24 workers; E:
-// 6min; S: 10+min.
+// Default sort(1) buffer is 1K, but we'll need G's, e.g. -S35% of 48GB.
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"runtime"
 	"strings"
-	"sync/atomic"
 	"time"
 
 	"github.com/miku/skate"
@@ -36,7 +33,7 @@ import (
 )
 
 var (
-	keyFuncName = flag.String("f", "tsand", "key function name, other: title, tnorm, tnysi")
+	keyFuncName = flag.String("f", "tsand", "key function name, other: title, tnorm, tnysi, tsand")
 	numWorkers  = flag.Int("w", runtime.NumCPU(), "number of workers")
 	batchSize   = flag.Int("b", 50000, "batch size")
 	verbose     = flag.Bool("verbose", false, "show progress")
@@ -50,10 +47,8 @@ var (
 		"tnysi": skate.KeyTitleNysiis,
 		"tsand": skate.KeyTitleSandcrawler,
 	}
-	keyFunc           skate.IdentifierKeyFunc
-	ok                bool
-	counterEmptyKey   uint64
-	counterEmptyIdent uint64
+	keyFunc skate.IdentifierKeyFunc
+	ok      bool
 )
 
 func main() {
@@ -69,10 +64,8 @@ func main() {
 		defer f.Close()
 		log.SetOutput(f)
 	}
-	bw := bufio.NewWriter(os.Stdout)
-	defer bw.Flush()
 	started := time.Now()
-	pp := parallel.NewProcessor(os.Stdin, bw, func(p []byte) ([]byte, error) {
+	pp := parallel.NewProcessor(os.Stdin, os.Stdout, func(p []byte) ([]byte, error) {
 		ident, key, err := keyFunc(p)
 		if err != nil {
 			if *bestEffort {
@@ -82,25 +75,14 @@ func main() {
 			return nil, err
 		}
 		ident, key = strings.TrimSpace(ident), strings.TrimSpace(key)
-		if key == "" {
-			atomic.AddUint64(&counterEmptyKey, 1)
-			return nil, nil
-		}
-		if ident == "" {
-			atomic.AddUint64(&counterEmptyIdent, 1)
-			return nil, nil
-		}
 		v := fmt.Sprintf("%s\t%s\t%s\n", ident, key, wsReplacer.Replace(string(p)))
 		return []byte(v), nil
 	})
 	pp.NumWorkers = *numWorkers
 	pp.BatchSize = *batchSize
 	pp.Verbose = *verbose
-	pp.LogFunc = func() {
-		log.Printf("empty keys/idents: %d/%d", counterEmptyKey, counterEmptyIdent)
-	}
 	if err := pp.Run(); err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("took: %s, docs with empty keys/ident skipped: %d/%d", time.Since(started), counterEmptyKey, counterEmptyIdent)
+	log.Printf("took: %s", time.Since(started))
 }
