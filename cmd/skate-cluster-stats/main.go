@@ -7,7 +7,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/goccy/go-json"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/miku/skate"
 	"github.com/miku/skate/parallel"
 )
@@ -17,7 +17,7 @@ var (
 	batchSize  = flag.Int("b", 100000, "batch size")
 	mode       = flag.String("m", "", "what to extract")
 
-	// json = jsoniter.ConfigCompatibleWithStandardLibrary
+	json = jsoniter.ConfigCompatibleWithStandardLibrary
 )
 
 type Func func([]byte) ([]byte, error)
@@ -26,11 +26,28 @@ func main() {
 	flag.Parse()
 	var f Func
 	switch *mode {
+	case "c":
+		f = func(p []byte) ([]byte, error) {
+			var cluster skate.Cluster
+			if err := json.Unmarshal(p, &cluster); err != nil {
+				return nil, err
+			}
+			var refs int
+			for _, v := range cluster.Values {
+				if v.Extra.Skate.Status == "ref" {
+					refs++
+				}
+			}
+			// total, refs, non-refs, key
+			s := fmt.Sprintf("%d\t%d\t%d\t%s\n",
+				len(cluster.Values), refs, len(cluster.Values)-refs, cluster.Key)
+			return []byte(s), nil
+		}
 	default:
 		f = func(p []byte) ([]byte, error) {
 			var cluster skate.Cluster
 			if err := json.Unmarshal(p, &cluster); err != nil {
-				return nil, nil
+				return nil, err
 			}
 			s := fmt.Sprintf("%d\t%s\n", len(cluster.Values), cluster.Key)
 			return []byte(s), nil
