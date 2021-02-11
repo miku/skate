@@ -81,7 +81,7 @@ type Release struct {
 	Ident       string `json:"ident,omitempty"`
 	Publisher   string `json:"publisher,omitempty"`
 	ReleaseDate string `json:"release_date,omitempty"`
-	ReleaseYear string `json:"release_year,omitempty"`
+	ReleaseYear string `json:"release_year,omitempty"` // might be int or str
 	Issue       string `json:"issue,omitempty"`
 	Volume      string `json:"volume,omitempty"`
 	Pages       string `json:"pages,omitempty"`
