@@ -16,7 +16,10 @@ var (
 	numWorkers = flag.Int("w", runtime.NumCPU(), "number of workers")
 	batchSize  = flag.Int("b", 100000, "batch size")
 	bestEffort = flag.Bool("B", false, "best effort, log errors")
-	mode       = flag.String("m", "", "what to extract (unmatched, count, ...)")
+	// unmatched: clusters w/ refs only
+	// count: number of entities in cluster (by type)
+	// default: key and number of values
+	mode = flag.String("m", "", "what to extract (unmatched, count, ...)")
 
 	json         = jsoniter.ConfigCompatibleWithStandardLibrary
 	bytesNewline = []byte("\n")
@@ -29,7 +32,6 @@ func main() {
 	var f Func
 	switch *mode {
 	case "unmatched":
-		// All clusters that only contain refs.
 		f = func(p []byte) ([]byte, error) {
 			var cluster skate.Cluster
 			if err := json.Unmarshal(p, &cluster); err != nil {
