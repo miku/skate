@@ -63,6 +63,7 @@ type Ref struct {
 
 // Release document.
 type Release struct {
+	ContainerID   string `json:"container_id,omitempty"`
 	ContainerName string `json:"container_name,omitempty"`
 	Contribs      []struct {
 		Index   int    `json:"index,omitempty"`
@@ -88,6 +89,9 @@ type Release struct {
 	Title       string `json:"title,omitempty"`
 	WorkID      string `json:"work_id,omitempty"`
 	Extra       struct {
+		DataCite struct {
+			MetadataVersion string `json:"metadataVersion"`
+		} `json:"datacite"`
 		Skate struct {
 			// Mark as converted.
 			Status string `json:"status,omitempty"`
