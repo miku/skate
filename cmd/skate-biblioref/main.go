@@ -59,8 +59,8 @@ func main() {
 			source = strings.ReplaceAll(fields[1], "https://fatcat.wiki/release/", "")
 			target = strings.ReplaceAll(fields[0], "https://fatcat.wiki/release/", "")
 			matchProvenance = "fuzzycat/ebee2de"
-			matchStatus = fields[2]
-			matchReason = fields[3]
+			matchStatus = strings.ReplaceAll(fields[2], "Status.", "")
+			matchReason = strings.ReplaceAll(fields[3], "Reason.", "")
 		}
 		br := skate.BiblioRef{
 			SourceReleaseIdent: source,
