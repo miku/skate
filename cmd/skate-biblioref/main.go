@@ -62,6 +62,9 @@ func main() {
 			matchStatus = strings.ReplaceAll(fields[2], "Status.", "")
 			matchReason = strings.ReplaceAll(fields[3], "Reason.", "")
 		}
+		if source == target {
+			return nil, nil
+		}
 		br := skate.BiblioRef{
 			SourceReleaseIdent: source,
 			TargetReleaseIdent: target,
