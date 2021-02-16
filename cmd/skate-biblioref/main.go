@@ -56,10 +56,6 @@ func main() {
 			target = fields[1]
 			matchProvenance = "join"
 		case 4:
-			// Result of a "fuzzycat verify" run. We only want Status.STRONG, Status.EXACT.
-			if fields[2] != "Status.EXACT" || fields[2] != "Status.STRONG" {
-				return nil, nil
-			}
 			source = strings.ReplaceAll(fields[1], "https://fatcat.wiki/release/", "")
 			target = strings.ReplaceAll(fields[0], "https://fatcat.wiki/release/", "")
 			matchProvenance = "fuzzycat/ebee2de"
