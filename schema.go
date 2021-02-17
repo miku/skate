@@ -79,16 +79,32 @@ type Release struct {
 		WikidataQID string `json:"wikidata_qid,omitempty"`
 		Jstor       string `json:"jstor,omitempty"`
 	} `json:"ext_ids,omitempty"`
-	Ident       string `json:"ident,omitempty"`
-	Publisher   string `json:"publisher,omitempty"`
-	ReleaseDate string `json:"release_date,omitempty"`
-	ReleaseYear string `json:"release_year,omitempty"` // might be int or str
-	Issue       string `json:"issue,omitempty"`
-	Volume      string `json:"volume,omitempty"`
-	Pages       string `json:"pages,omitempty"`
-	Title       string `json:"title,omitempty"`
-	WorkID      string `json:"work_id,omitempty"`
-	Extra       struct {
+	Ident     string `json:"ident,omitempty"`
+	Publisher string `json:"publisher,omitempty"`
+	Refs      []struct {
+		ContainerName string `json:"container_name"`
+		Extra         struct {
+			DOI     string   `json:"doi"`
+			Authors []string `json:"authors"`
+			Key     string   `json:"key"`
+			Year    string   `json:"year"`
+			Locator string   `json:"locator"`
+			Volume  string   `json:"volume"`
+		} `json:"extra"`
+		Index   int64  `json:"index"`
+		Key     string `json:"key"`
+		Locator string `json:"locator"`
+		Year    int64  `json:"year"`
+	} `json:"refs"`
+	ReleaseDate  string `json:"release_date,omitempty"`
+	ReleaseYear  string `json:"release_year,omitempty"` // might be int or str
+	ReleaseStage string `json:"release_stage,omitempty"`
+	Issue        string `json:"issue,omitempty"`
+	Volume       string `json:"volume,omitempty"`
+	Pages        string `json:"pages,omitempty"`
+	Title        string `json:"title,omitempty"`
+	WorkID       string `json:"work_id,omitempty"`
+	Extra        struct {
 		DataCite struct {
 			MetadataVersion string `json:"metadataVersion"`
 		} `json:"datacite"`

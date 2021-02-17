@@ -24,6 +24,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"runtime"
@@ -32,11 +33,13 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/miku/skate"
 	"github.com/miku/skate/parallel"
+	"github.com/sethgrid/pester"
 )
 
 var (
 	numWorkers = flag.Int("w", runtime.NumCPU(), "number of workers")
 	batchSize  = flag.Int("b", 100000, "batch size")
+	extended   = flag.Bool("E", false, "fetch data from fatcat API")
 
 	json         = jsoniter.ConfigCompatibleWithStandardLibrary
 	bytesNewline = []byte("\n")
@@ -72,6 +75,19 @@ func main() {
 			MatchReason:        matchReason,
 			MatchProvenance:    matchProvenance,
 		}
+		if *extended {
+			var release skate.Release
+			if err := FetchRelease(source, &release); err != nil {
+				log.Fatal(err)
+			}
+			br.SourceReleaseStage = release.ReleaseStage
+			br.SourceWorkIdent = release.WorkID
+			br.SourceYear = release.ReleaseYear
+			if err := FetchRelease(target, &release); err != nil {
+				log.Fatal(err)
+			}
+			br.TargetWorkIdent = release.WorkID
+		}
 		b, err := json.Marshal(br)
 		b = append(b, bytesNewline...)
 		return b, err
@@ -81,4 +97,15 @@ func main() {
 	if err := pp.Run(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func FetchRelease(ident string, release *skate.Release) error {
+	link := fmt.Sprintf("https://api.fatcat.wiki/v0/release/{}", ident)
+	resp, err := pester.Get(link)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	dec := json.NewDecoder(resp.Body)
+	return dec.Decode(release)
 }
