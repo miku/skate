@@ -100,7 +100,7 @@ func main() {
 }
 
 func FetchRelease(ident string, release *skate.Release) error {
-	link := fmt.Sprintf("https://api.fatcat.wiki/v0/release/{}", ident)
+	link := fmt.Sprintf("https://api.fatcat.wiki/v0/release/%s", ident)
 	resp, err := pester.Get(link)
 	if err != nil {
 		return err
