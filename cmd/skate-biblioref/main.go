@@ -28,6 +28,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 
 	jsoniter "github.com/json-iterator/go"
@@ -82,7 +83,7 @@ func main() {
 			}
 			br.SourceReleaseStage = release.ReleaseStage
 			br.SourceWorkIdent = release.WorkID
-			br.SourceYear = release.ReleaseYear
+			br.SourceYear = strconv.Itoa(release.ReleaseYear)
 			if err := FetchRelease(target, &release); err != nil {
 				log.Fatal(err)
 			}

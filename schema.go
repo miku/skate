@@ -1,7 +1,5 @@
 package skate
 
-import "strconv"
-
 // RefToRelease converts a ref to a release. Set a extra.skate.status flag to
 // be able to distinguish coverted entities later.
 func RefToRelease(ref *Ref) (*Release, error) {
@@ -26,7 +24,8 @@ func RefToRelease(ref *Ref) (*Release, error) {
 	release.Volume = b.Volume
 	release.Issue = b.Issue
 	release.Pages = b.Pages
-	release.ReleaseYear = strconv.Itoa(ref.ReleaseYear)
+	release.ReleaseYear = ref.ReleaseYear
+	// release.ReleaseYear = strconv.Itoa(ref.ReleaseYear)
 	for i, name := range b.ContribRawNames {
 		contribs[i].Index = i
 		contribs[i].RawName = name
@@ -97,7 +96,7 @@ type Release struct {
 		Year    int64  `json:"year"`
 	} `json:"refs"`
 	ReleaseDate  string `json:"release_date,omitempty"`
-	ReleaseYear  string `json:"release_year,omitempty"` // might be int or str
+	ReleaseYear  int    `json:"release_year,omitempty"` // might be int or str
 	ReleaseStage string `json:"release_stage,omitempty"`
 	Issue        string `json:"issue,omitempty"`
 	Volume       string `json:"volume,omitempty"`
