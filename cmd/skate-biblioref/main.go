@@ -25,6 +25,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"runtime"
@@ -32,6 +33,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dgraph-io/ristretto"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/miku/skate"
 	"github.com/miku/skate/parallel"
@@ -45,10 +47,20 @@ var (
 
 	json         = jsoniter.ConfigCompatibleWithStandardLibrary
 	bytesNewline = []byte("\n")
+	cache        *ristretto.Cache
+	err          error
 )
 
 func main() {
 	flag.Parse()
+	cache, err = ristretto.NewCache(&ristretto.Config{
+		NumCounters: 1e7,     // number of keys to track frequency of (10M).
+		MaxCost:     1 << 30, // maximum cost of cache (1GB).
+		BufferItems: 64,      // number of keys per Get buffer.
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
 	pp := parallel.NewProcessor(os.Stdin, os.Stdout, func(p []byte) ([]byte, error) {
 		var (
 			fields                                                    = strings.Fields(string(p))
@@ -103,12 +115,25 @@ func main() {
 }
 
 func FetchRelease(ident string, release *skate.Release) error {
-	link := fmt.Sprintf("https://api.fatcat.wiki/v0/release/%s", ident)
-	resp, err := pester.Get(link)
-	if err != nil {
-		return err
+	v, found := cache.Get(ident)
+	if !found {
+		link := fmt.Sprintf("https://api.fatcat.wiki/v0/release/%s", ident)
+		resp, err := pester.Get(link)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		cache.Set(ident, string(b), 1)
+		return json.Unmarshal(b, release)
+	} else {
+		s, ok := v.(string)
+		if !ok {
+			return fmt.Errorf("invalid cache value")
+		}
+		return json.Unmarshal([]byte(s), release)
 	}
-	defer resp.Body.Close()
-	dec := json.NewDecoder(resp.Body)
-	return dec.Decode(release)
 }
