@@ -30,6 +30,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/miku/skate"
@@ -70,6 +71,7 @@ func main() {
 			return nil, nil
 		}
 		br := skate.BiblioRef{
+			UpdateTs:           time.Now().Unix(),
 			SourceReleaseIdent: source,
 			TargetReleaseIdent: target,
 			MatchStatus:        matchStatus,

@@ -117,7 +117,7 @@ type Release struct {
 // BiblioRef as a prototype for indexing.
 type BiblioRef struct {
 	Key                    string `json:"_key,omitempty"`      // XXX: clarify
-	UpdateTs               string `json:"update_ts,omitempty"` // XXX: maybe: epoch_millis
+	UpdateTs               int64  `json:"update_ts,omitempty"` // XXX: maybe: epoch_millis, https://www.elastic.co/guide/en/elasticsearch/reference/current/date.html
 	SourceReleaseIdent     string `json:"source_release_ident,omitempty"`
 	SourceWorkIdent        string `json:"source_work_ident,omitempty"`
 	SourceWikipediaArticle string `json:"source_wikipedia_article,omitempty"`
