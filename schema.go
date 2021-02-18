@@ -105,7 +105,7 @@ type Release struct {
 	WorkID       string `json:"work_id,omitempty"`
 	Extra        struct {
 		DataCite struct {
-			MetadataVersion string `json:"metadataVersion"`
+			MetadataVersion int `json:"metadataVersion"`
 		} `json:"datacite"`
 		Skate struct {
 			// Mark as converted.
