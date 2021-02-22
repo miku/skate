@@ -11,4 +11,5 @@ require (
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/sethgrid/pester v1.1.0 // indirect
 	golang.org/x/text v0.3.5
+	golang.org/x/tools v0.1.0 // indirect
 )

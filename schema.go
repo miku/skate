@@ -81,32 +81,42 @@ type Release struct {
 	Ident     string `json:"ident,omitempty"`
 	Publisher string `json:"publisher,omitempty"`
 	Refs      []struct {
-		ContainerName string `json:"container_name"`
+		ContainerName string `json:"container_name,omitempty"`
 		Extra         struct {
-			DOI     string   `json:"doi"`
-			Authors []string `json:"authors"`
-			Key     string   `json:"key"`
-			Year    string   `json:"year"`
-			Locator string   `json:"locator"`
-			Volume  string   `json:"volume"`
+			DOI     string   `json:"doi,omitempty"`
+			Authors []string `json:"authors,omitempty"`
+			Key     string   `json:"key,omitempty"`
+			Year    string   `json:"year,omitempty"`
+			Locator string   `json:"locator,omitempty"`
+			Volume  string   `json:"volume,omitempty"`
 		} `json:"extra"`
-		Index   int64  `json:"index"`
-		Key     string `json:"key"`
-		Locator string `json:"locator"`
-		Year    int64  `json:"year"`
+		Index   int64  `json:"index,omitempty"`
+		Key     string `json:"key,omitempty"`
+		Locator string `json:"locator,omitempty"`
+		Year    int64  `json:"year,omitempty"`
 	} `json:"refs"`
 	ReleaseDate  string `json:"release_date,omitempty"`
 	ReleaseYear  int    `json:"release_year,omitempty"` // might be int or str
 	ReleaseStage string `json:"release_stage,omitempty"`
+	ReleaseType  string `json:"release_type,omitempty"`
 	Issue        string `json:"issue,omitempty"`
 	Volume       string `json:"volume,omitempty"`
 	Pages        string `json:"pages,omitempty"`
 	Title        string `json:"title,omitempty"`
 	WorkID       string `json:"work_id,omitempty"`
 	Extra        struct {
+		ContainerName string   `json:"container_name"`
+		Subtitle      []string `json:"subtitle,omitempty"`
+		Crossref      struct {
+			Type string `json:"type,omitempty"`
+		} `json:"crossref,omitempty"`
 		DataCite struct {
-			MetadataVersion int `json:"metadataVersion"`
-		} `json:"datacite"`
+			MetadataVersion int `json:"metadataVersion,omitempty"`
+			Relations       []struct {
+				RelatedIdentifierType string `json:"relatedIdentifierType,omitempty"`
+				RelatedIdentifier     string `json:"relatedIdentifier,omitempty"`
+			} `json:"relations,omitempty"`
+		} `json:"datacite,omitempty"`
 		Skate struct {
 			// Mark as converted.
 			Status string `json:"status,omitempty"`
