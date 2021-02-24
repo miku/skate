@@ -20,8 +20,8 @@ func (s *Set) IsEmpty() bool {
 
 // Equals returns true, if sets contain the same elements.
 func (s *Set) Equals(t *Set) bool {
-	for _, v := range *s {
-		if !t.Contains(v) {
+	for k := range *s {
+		if !t.Contains(k) {
 			return false
 		}
 	}

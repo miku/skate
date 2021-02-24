@@ -83,6 +83,7 @@ var (
 	PatVersionedDOI    = regexp.MustCompile(`10[.].*/v[0-9]{1,}$`)
 	PatArxivVersion    = regexp.MustCompile(`(.*)v[0-9]{1,2}$`)
 	PatFilenameLike    = regexp.MustCompile(`.*[.][a-z]{2,3}$`)
+	PatDigits          = regexp.MustCompile(`\d+`)
 )
 
 // Verify follows the fuzzycat (Python) implementation of this function. The Go
@@ -129,7 +130,8 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 			return MatchResult{StatusStrong, ReasonCustomBSIUndated}
 		}
 		if a.Title != "" && a.Title == b.Title &&
-			((a.Extra.Subtitle != "" && b.Extra.Subtitle == "") || (a.Extra.Subtitle == "" && b.Extra.Subtitle != "")) {
+			((len(a.Extra.Subtitle) > 0 && a.Extra.Subtitle[0] != "" && len(b.Extra.Subtitle) == 0) ||
+				(len(a.Extra.Subtitle) == 0 && len(b.Extra.Subtitle) > 0 && b.Extra.Subtitle[0] != "")) {
 			return MatchResult{StatusStrong, ReasonCustomBSISubdoc}
 		}
 	}
@@ -176,7 +178,7 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 			return MatchResult{StatusStrong, ReasonDataciteRelatedID}
 		}
 	}
-	if a.ExtIDs.Arvix != "" && b.ExtIDs.Arvix != "" {
+	if a.ExtIDs.Arxiv != "" && b.ExtIDs.Arxiv != "" {
 		aSub := PatArxivVersion.FindStringSubmatch(a.ExtIDs.Arxiv)
 		bSub := PatArxivVersion.FindStringSubmatch(b.ExtIDs.Arxiv)
 		if len(aSub) == 2 && len(bSub) == 2 && aSub[1] == bSub[1] {
@@ -211,8 +213,8 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 			return MatchResult{StatusDifferent, ReasonComponent}
 		}
 	}
-	aSlugTitle := strings.Replace(slugifyString(a.Title), "\n", " ", -1)
-	bSlugTitle := strings.Replace(slugifyString(b.Title), "\n", " ", -1)
+	aSlugTitle := strings.TrimSpace(strings.Replace(slugifyString(a.Title), "\n", " ", -1))
+	bSlugTitle := strings.TrimSpace(strings.Replace(slugifyString(b.Title), "\n", " ", -1))
 
 	if aSlugTitle == bSlugTitle {
 		if a.ReleaseYear != 0 && b.ReleaseYear != 0 && absInt(a.ReleaseYear-b.ReleaseYear) > 40 {
@@ -242,19 +244,16 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 			}
 		}
 	}
-
 	rawAuthors := func(rel Release) (names []string) {
 		for _, c := range rel.Contribs {
 			names = append(names, c.RawName)
 		}
 		return names
 	}
-
 	aAuthors := set.FromSlice(rawAuthors(a))
 	bAuthors := set.FromSlice(rawAuthors(b))
-	aSlugAuthors := mapString(slugifyString, aAuthors)
-	bSlugAuthors := mapString(slugifyString, bAuthors)
-
+	aSlugAuthors := set.FromSlice(mapString(slugifyString, aAuthors.Slice()))
+	bSlugAuthors := set.FromSlice(mapString(slugifyString, bAuthors.Slice()))
 	if aTitleLower == bTitleLower {
 		if aAuthors.Len() > 0 && aAuthors.Equals(bAuthors) {
 			if a.ReleaseYear > 0 && b.ReleaseYear > 0 && absInt(a.ReleaseYear-b.ReleaseYear) > 4 {
@@ -273,11 +272,51 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 			return MatchResult{StatusDifferent, ReasonYear}
 		}
 	}
+	// XXX: skipping chemical formula detection (to few cases; https://git.io/Jtdax)
+	if len(aSlugTitle) < 10 && aSlugTitle != bSlugTitle {
+		return MatchResult{StatusAmbiguous, ReasonShortTitle}
+	}
+	if PatDigits.MatchString(aSlugTitle) &&
+		aSlugTitle != bSlugTitle &&
+		unifyDigits(aSlugTitle) == unifyDigits(bSlugTitle) {
+		return MatchResult{StatusDifferent, ReasonNumDiff}
+	}
+	if aSlugTitle != "" && bSlugTitle != "" &&
+		strings.ReplaceAll(aSlugTitle, " ", "") == strings.ReplaceAll(bSlugTitle, " ", "") {
+		if aSlugAuthors.Intersection(bSlugAuthors).Len() > 0 {
+			if a.ReleaseYear > 0 && b.ReleaseYear > 0 && absInt(a.ReleaseYear-b.ReleaseYear) > 4 {
+				return MatchResult{StatusDifferent, ReasonYear}
+			}
+			return MatchResult{StatusStrong, ReasonSlugTitleAuthorMatch}
+		}
+	}
+	if a.ReleaseYear > 0 && a.ReleaseYear == b.ReleaseYear && aTitleLower == bTitleLower {
+		if (a.ExtIDs.PMID != "" && b.ExtIDs.DOI != "") || (b.ExtIDs.PMID != "" && a.ExtIDs.DOI != "") {
+			return MatchResult{StatusStrong, ReasonPMIDDOIPair}
+		}
+	}
+	if a.ExtIDs.Jstor != "" && a.ExtIDs.Jstor != "" && a.ExtIDs.Jstor != b.ExtIDs.Jstor {
+		return MatchResult{StatusDifferent, ReasonJstorID}
+	}
+	if a.ContainerID == b.ContainerID && a.ExtIDs.DOI != b.ExtIDs.DOI &&
+		doiPrefix(a.ExtIDs.DOI) != "10.1126" &&
+		doiPrefix(a.ExtIDs.DOI) == doiPrefix(b.ExtIDs.DOI) {
+	}
 
 	return MatchResult{
 		StatusUnknown,
 		ReasonUnknown,
 	}
+}
+
+func doiPrefix(s string) string {
+	parts := strings.Split(s, "/")
+	return parts[0]
+}
+
+// unifyDigits replaces all digit groups with a placeholder, e.g. "<NUM>".
+func unifyDigits(s string) string {
+	return PatDigits.ReplaceAllString(s, "<NUM>")
 }
 
 // looksLikeFilename returns true, if the given string could be a filename.
