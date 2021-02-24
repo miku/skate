@@ -18,6 +18,7 @@ func (s *Set) IsEmpty() bool {
 	return s.Len() == 0
 }
 
+// Equals returns true, if sets contain the same elements.
 func (s *Set) Equals(t *Set) bool {
 	for _, v := range *s {
 		if !t.Contains(v) {
@@ -33,6 +34,7 @@ func (s *Set) Contains(v string) bool {
 	return ok
 }
 
+// Intersection returns a new set containing all elements found in both sets.
 func (s *Set) Intersection(t *Set) *Set {
 	u := New()
 	for _, v := range s.Slice() {
