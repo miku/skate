@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/miku/skate/set"
@@ -321,8 +322,18 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 		return MatchResult{StatusAmbiguous, ReasonCustomPrefix105860ChoiceReview}
 	}
 	// XXX: parse pages
-	// aParsedPages, err := parsePageString(a.Pages)
-
+	aParsedPages := parsePageString(a.Pages)
+	bParsedPages := parsePageString(b.Pages)
+	if absInt(aParsedPages.Count()-bParsedPages.Count()) > 5 {
+		return MatchResult{StatusDifferent, ReasonPageCount}
+	}
+	if aAuthors.Equals(bAuthors) &&
+		a.ContainerID == b.ContainerID &&
+		a.ReleaseYear == b.ReleaseYear &&
+		a.Title != b.Title &&
+		(strings.Contains(a.Title, b.Title) || strings.Contains(b.Title, a.Title)) {
+		return MatchResult{StatusStrong, ReasonTitleArtifact}
+	}
 	return MatchResult{
 		StatusUnknown,
 		ReasonUnknown,
@@ -332,39 +343,40 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 type ParsedPages struct {
 	Start int
 	End   int
-	Count int
 	Err   error
 }
 
-// func parsePageString(s string) (*ParsedPages, error) {
-// 	s = strings.TrimSpace(s)
-// 	if len(s) == 0 {
-// 		return nil, fmt.Errorf("parse pages: empty string")
-// 	}
-// 	matches := PatPages.FindAllStringSubmatch(s, -1)
-// 	if len(matches) != 3 {
-// 		return nil, fmt.Errorf("parse pages: no page pattern")
-// 	}
-// 	start, end := matches[1], matches[2]
-// 	if len(end) == 1 && len(start) > 1 && start[len(start)-1] < end[0] {
-// 		end = fmt.Sprintf("%s%s", start[:len(start)-1], end[0])
-// 	}
-// 	var (
-// 		pp  = ParsedPages{}
-// 		err error
-// 	)
-// 	if pp.Start, err = strconv.Atoi(start); err != nil {
-// 		return nil, err
-// 	}
-// 	if pp.End, err = strconv.Atoi(end); err != nil {
-// 		return nil, err
-// 	}
-// 	if pp.Start > pp.End {
-// 		return nil, fmt.Errorf("invalid page count: %s", s)
-// 	}
-// 	pp.Count = pp.End - pp.Start + 1
-// 	return &pp
-// }
+func (pp *ParsedPages) Count() int {
+	return pp.End - pp.Start + 1
+}
+
+func parsePageString(s string) *ParsedPages {
+	s = strings.TrimSpace(s)
+	var pp = ParsedPages{}
+	if len(s) == 0 {
+		pp.Err = fmt.Errorf("parse pages: empty string")
+		return &pp
+	}
+	matches := PatPages.FindStringSubmatch(s)
+	if len(matches) != 3 {
+		pp.Err = fmt.Errorf("parse pages: no page pattern")
+		return &pp
+	}
+	start, end := matches[1], matches[2]
+	if len(end) == 1 && len(start) > 1 && start[len(start)-1] < end[0] {
+		end = fmt.Sprintf("%s%c", start[:len(start)-1], end[0])
+	}
+	if pp.Start, pp.Err = strconv.Atoi(start); pp.Err != nil {
+		return &pp
+	}
+	if pp.End, pp.Err = strconv.Atoi(end); pp.Err != nil {
+		return &pp
+	}
+	if pp.Start > pp.End {
+		pp.Err = fmt.Errorf("invalid page count: %s", s)
+	}
+	return &pp
+}
 
 // averageScore take a limited set of authors and calculates pairwise
 // similarity scores, then returns the average of the best scores; between 0
@@ -454,7 +466,7 @@ func absInt(v int) int {
 // slugifyString is a basic string slugifier.
 func slugifyString(s string) string {
 	var buf bytes.Buffer
-	for _, c := range strings.ToLower(s) {
+	for _, c := range strings.TrimSpace(strings.ToLower(s)) {
 		if (c > 96 && c < 123) || (c > 47 && c < 58) || (c == 32) || (c == 9) || (c == 10) {
 			fmt.Fprintf(&buf, "%c", c)
 		}
@@ -472,7 +484,7 @@ func looksLikeComponent(a, b string) bool {
 		}
 	}
 	if len(bc) > 1 {
-		if strings.Join(bc[0:len(ac)-1], ".") == a {
+		if strings.Join(bc[0:len(bc)-1], ".") == a {
 			return true
 		}
 	}
