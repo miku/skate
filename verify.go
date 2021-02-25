@@ -84,6 +84,7 @@ var (
 	PatArxivVersion    = regexp.MustCompile(`(.*)v[0-9]{1,2}$`)
 	PatFilenameLike    = regexp.MustCompile(`.*[.][a-z]{2,3}$`)
 	PatDigits          = regexp.MustCompile(`\d+`)
+	PatPages           = regexp.MustCompile(`([0-9]{1,})-([0-9]{1,})`)
 )
 
 // Verify follows the fuzzycat (Python) implementation of this function. The Go
@@ -303,12 +304,67 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 		doiPrefix(a.ExtIDs.DOI) == doiPrefix(b.ExtIDs.DOI) {
 		return MatchResult{StatusDifferent, ReasonSharedDOIPrefix}
 	}
+	if aAuthors.Len() > 0 && aSlugAuthors.Intersection(bSlugAuthors).IsEmpty() {
+		numAuthors := set.Min(aSlugAuthors, bSlugAuthors)
+		score := averageScore(aSlugAuthors, bSlugAuthors)
+		if (numAuthors < 3 && score > 0.9) || (numAuthors >= 3 && score > 0.5) {
+			return MatchResult{StatusStrong, ReasonTokenizedAuthors}
+		}
+		aTok := set.FromSlice(strings.Fields(aSlugAuthors.Join(" ")))
+		bTok := set.FromSlice(strings.Fields(bSlugAuthors.Join(" ")))
+		if aTok.Jaccard(bTok) > 0.35 {
+			return MatchResult{StatusStrong, ReasonJaccardAuthors}
+		}
+		return MatchResult{StatusDifferent, ReasonContribIntersectionEmpty}
+	}
+	if doiPrefix(a.ExtIDs.DOI) == "10.5860" || doiPrefix(b.ExtIDs.DOI) == "10.5860" {
+		return MatchResult{StatusAmbiguous, ReasonCustomPrefix105860ChoiceReview}
+	}
+	// XXX: parse pages
+	// aParsedPages, err := parsePageString(a.Pages)
 
 	return MatchResult{
 		StatusUnknown,
 		ReasonUnknown,
 	}
 }
+
+type ParsedPages struct {
+	Start int
+	End   int
+	Count int
+	Err   error
+}
+
+// func parsePageString(s string) (*ParsedPages, error) {
+// 	s = strings.TrimSpace(s)
+// 	if len(s) == 0 {
+// 		return nil, fmt.Errorf("parse pages: empty string")
+// 	}
+// 	matches := PatPages.FindAllStringSubmatch(s, -1)
+// 	if len(matches) != 3 {
+// 		return nil, fmt.Errorf("parse pages: no page pattern")
+// 	}
+// 	start, end := matches[1], matches[2]
+// 	if len(end) == 1 && len(start) > 1 && start[len(start)-1] < end[0] {
+// 		end = fmt.Sprintf("%s%s", start[:len(start)-1], end[0])
+// 	}
+// 	var (
+// 		pp  = ParsedPages{}
+// 		err error
+// 	)
+// 	if pp.Start, err = strconv.Atoi(start); err != nil {
+// 		return nil, err
+// 	}
+// 	if pp.End, err = strconv.Atoi(end); err != nil {
+// 		return nil, err
+// 	}
+// 	if pp.Start > pp.End {
+// 		return nil, fmt.Errorf("invalid page count: %s", s)
+// 	}
+// 	pp.Count = pp.End - pp.Start + 1
+// 	return &pp
+// }
 
 // averageScore take a limited set of authors and calculates pairwise
 // similarity scores, then returns the average of the best scores; between 0

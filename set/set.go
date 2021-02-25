@@ -1,6 +1,9 @@
 package set
 
-import "sort"
+import (
+	"sort"
+	"strings"
+)
 
 // Set implements basic string set operations.
 type Set map[string]struct{}
@@ -106,6 +109,31 @@ func (s *Set) Jaccard(t *Set) float64 {
 	} else {
 		return float64(s.Intersection(t).Len()) / float64(u.Len())
 	}
+}
+
+func (s *Set) Join(sep string) string {
+	return strings.Join(s.Slice(), sep)
+}
+
+// Max returns the size of the largest set.
+func Max(ss ...*Set) (max int) {
+	for _, s := range ss {
+		if s.Len() > max {
+			max = s.Len()
+		}
+	}
+	return
+}
+
+// Min returns the size of the smallest set.
+func Min(ss ...*Set) (min int) {
+	min = 2 << 30
+	for _, s := range ss {
+		if s.Len() < min {
+			min = s.Len()
+		}
+	}
+	return
 }
 
 // New creates a new set.
