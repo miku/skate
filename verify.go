@@ -301,12 +301,64 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 	if a.ContainerID == b.ContainerID && a.ExtIDs.DOI != b.ExtIDs.DOI &&
 		doiPrefix(a.ExtIDs.DOI) != "10.1126" &&
 		doiPrefix(a.ExtIDs.DOI) == doiPrefix(b.ExtIDs.DOI) {
+		return MatchResult{StatusDifferent, ReasonSharedDOIPrefix}
 	}
 
 	return MatchResult{
 		StatusUnknown,
 		ReasonUnknown,
 	}
+}
+
+// averageScore take a limited set of authors and calculates pairwise
+// similarity scores, then returns the average of the best scores; between 0
+// and 1.
+func averageScore(a, b *set.Set) float64 {
+	aTrimmed := a.TopK(5)
+	bTrimmed := b.TopK(5)
+	maxScores := make(map[string]float64) // For each a, keep the max.
+	for _, pair := range aTrimmed.Product(bTrimmed) {
+		a, b := pair[0], pair[1]
+		score := authorSimilarityScore(a, b)
+		if v, ok := maxScores[a]; !ok || score > v {
+			maxScores[a] = score
+		}
+	}
+	var sum, avg float64
+	for _, v := range maxScores {
+		sum += v
+	}
+	avg = sum / float64(len(maxScores))
+	return avg
+}
+
+// authorSimilarityScore is a hacky similarity score.
+func authorSimilarityScore(s, t string) float64 {
+	ss := set.FromSlice(tokenNgrams(s, 2))
+	ts := set.FromSlice(tokenNgrams(t, 2))
+	return ss.Jaccard(ts)
+}
+
+// tokenNgrams are groups of n tokens per token in string, e.g. for n=2 and
+// string "Anne K Lam", we would get ["an", "ne", "k", "la", "m"].
+func tokenNgrams(s string, n int) (result []string) {
+	var buf bytes.Buffer
+	for _, token := range tokenizeString(s) {
+		buf.Reset()
+		for i, c := range token {
+			if i > 0 && i%n == 0 {
+				result = append(result, buf.String())
+				buf.Reset()
+			}
+			buf.WriteRune(c) // XXX: skipping error handling
+		}
+		result = append(result, buf.String())
+	}
+	return
+}
+
+func tokenizeString(s string) []string {
+	return strings.Fields(strings.ToLower(s))
 }
 
 func doiPrefix(s string) string {
@@ -343,6 +395,7 @@ func absInt(v int) int {
 	return v
 }
 
+// slugifyString is a basic string slugifier.
 func slugifyString(s string) string {
 	var buf bytes.Buffer
 	for _, c := range strings.ToLower(s) {
