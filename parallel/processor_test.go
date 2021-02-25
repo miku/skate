@@ -45,7 +45,7 @@ func TestSimple(t *testing.T) {
 		about    string
 		r        io.Reader
 		expected string
-		f        TransformerFunc
+		f        func([]byte) ([]byte, error)
 		err      error
 	}{
 		{

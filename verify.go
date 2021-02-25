@@ -296,7 +296,7 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 			return MatchResult{StatusStrong, ReasonPMIDDOIPair}
 		}
 	}
-	if a.ExtIDs.Jstor != "" && a.ExtIDs.Jstor != "" && a.ExtIDs.Jstor != b.ExtIDs.Jstor {
+	if a.ExtIDs.Jstor != "" && b.ExtIDs.Jstor != "" && a.ExtIDs.Jstor != b.ExtIDs.Jstor {
 		return MatchResult{StatusDifferent, ReasonJstorID}
 	}
 	if a.ContainerID == b.ContainerID && a.ExtIDs.DOI != b.ExtIDs.DOI &&
