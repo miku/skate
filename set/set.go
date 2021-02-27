@@ -136,6 +136,16 @@ func Min(ss ...*Set) (min int) {
 	return
 }
 
+func Filter(s *Set, f func(string) bool) *Set {
+	t := New()
+	for v := range *s {
+		if f(v) {
+			t.Add(v)
+		}
+	}
+	return t
+}
+
 // New creates a new set.
 func New() *Set {
 	s := make(Set)

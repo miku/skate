@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/miku/skate/set"
 )
@@ -91,7 +92,7 @@ var (
 // Verify follows the fuzzycat (Python) implementation of this function. The Go
 // version cab be used for large batch processing (where the Python version
 // might take two or more days).
-func Verify(a, b Release, minTitleLength int) MatchResult {
+func Verify(a, b *Release, minTitleLength int) MatchResult {
 	if a.ExtIDs.DOI != "" && a.ExtIDs.DOI == b.ExtIDs.DOI {
 		return MatchResult{StatusExact, ReasonDOI}
 	}
@@ -100,7 +101,7 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 	}
 	aTitleLower := strings.ToLower(a.Title)
 	bTitleLower := strings.ToLower(b.Title)
-	if len(a.Title) < minTitleLength {
+	if utf8.RuneCountInString(a.Title) < minTitleLength {
 		return MatchResult{StatusAmbiguous, ReasonShortTitle}
 	}
 	if BlacklistTitle.Contains(aTitleLower) {
@@ -120,6 +121,7 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 		}
 	}
 	if a.Title != "" && a.Title == b.Title &&
+		a.Extra.DataCite.MetadataVersion > 0 && b.Extra.DataCite.MetadataVersion > 0 &&
 		a.Extra.DataCite.MetadataVersion != b.Extra.DataCite.MetadataVersion {
 		return MatchResult{StatusExact, ReasonDataciteVersion}
 	}
@@ -163,11 +165,11 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 	if looksLikeComponent(a.ExtIDs.DOI, b.ExtIDs.DOI) {
 		return MatchResult{StatusStrong, ReasonVersionedDOI}
 	}
-	if len(a.Extra.DataCite.Relations) > 0 && len(b.Extra.DataCite.Relations) > 0 {
-		getRelatedDOI := func(rel Release) *set.Set {
+	if len(a.Extra.DataCite.Relations) > 0 || len(b.Extra.DataCite.Relations) > 0 {
+		getRelatedDOI := func(rel *Release) *set.Set {
 			ss := set.New()
 			for _, rel := range rel.Extra.DataCite.Relations {
-				if rel.RelatedIdentifierType != "doi" {
+				if strings.ToLower(rel.RelatedIdentifierType) != "doi" {
 					continue
 				}
 				ss.Add(rel.RelatedIdentifier)
@@ -224,9 +226,8 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 		}
 	}
 	if aSlugTitle == bSlugTitle {
-		ieeeArxivCheck := func(a, b Release) (ok bool) {
-			parts := strings.Split(a.ExtIDs.DOI, "/")
-			return len(parts) < 2 && parts[0] == "10.1109" && b.ExtIDs.Arxiv != ""
+		ieeeArxivCheck := func(a, b *Release) (ok bool) {
+			return doiPrefix(a.ExtIDs.DOI) == "10.1109" && b.ExtIDs.Arxiv != ""
 		}
 		if ieeeArxivCheck(a, b) || ieeeArxivCheck(b, a) {
 			return MatchResult{StatusStrong, ReasonCustomIEEEArxiv}
@@ -246,9 +247,13 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 			}
 		}
 	}
-	rawAuthors := func(rel Release) (names []string) {
+	rawAuthors := func(rel *Release) (names []string) {
 		for _, c := range rel.Contribs {
-			names = append(names, c.RawName)
+			name := strings.TrimSpace(c.RawName)
+			if name == "" {
+				continue
+			}
+			names = append(names, name)
 		}
 		return names
 	}
@@ -261,8 +266,8 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 			if a.ReleaseYear > 0 && b.ReleaseYear > 0 && absInt(a.ReleaseYear-b.ReleaseYear) > 4 {
 				return MatchResult{StatusDifferent, ReasonYear}
 			}
+			return MatchResult{StatusExact, ReasonTitleAuthorMatch}
 		}
-		return MatchResult{StatusExact, ReasonTitleAuthorMatch}
 	}
 	if looksLikeFilename(a.Title) || looksLikeFilename(b.Title) {
 		if a.Title != b.Title {
@@ -270,7 +275,7 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 		}
 	}
 	if a.Title != "" && a.Title == b.Title {
-		if absInt(a.ReleaseYear-b.ReleaseYear) > 2 {
+		if a.ReleaseYear > 0 && b.ReleaseYear > 0 && absInt(a.ReleaseYear-b.ReleaseYear) > 2 {
 			return MatchResult{StatusDifferent, ReasonYear}
 		}
 	}
@@ -308,13 +313,22 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 	if aAuthors.Len() > 0 && aSlugAuthors.Intersection(bSlugAuthors).IsEmpty() {
 		numAuthors := set.Min(aSlugAuthors, bSlugAuthors)
 		score := averageScore(aSlugAuthors, bSlugAuthors)
+		// log.Println(a.Ident, "xx", numAuthors, score)
 		if (numAuthors < 3 && score > 0.9) || (numAuthors >= 3 && score > 0.5) {
 			return MatchResult{StatusStrong, ReasonTokenizedAuthors}
 		}
 		aTok := set.FromSlice(strings.Fields(aSlugAuthors.Join(" ")))
 		bTok := set.FromSlice(strings.Fields(bSlugAuthors.Join(" ")))
-		if aTok.Jaccard(bTok) > 0.35 {
-			return MatchResult{StatusStrong, ReasonJaccardAuthors}
+		aTok = set.Filter(aTok, func(s string) bool {
+			return len(s) > 2
+		})
+		bTok = set.Filter(bTok, func(s string) bool {
+			return len(s) > 2
+		})
+		if aTok.Len() > 0 && bTok.Len() > 0 {
+			if aTok.Jaccard(bTok) > 0.35 {
+				return MatchResult{StatusStrong, ReasonJaccardAuthors}
+			}
 		}
 		return MatchResult{StatusDifferent, ReasonContribIntersectionEmpty}
 	}
@@ -324,8 +338,10 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 	// XXX: parse pages
 	aParsedPages := parsePageString(a.Pages)
 	bParsedPages := parsePageString(b.Pages)
-	if absInt(aParsedPages.Count()-bParsedPages.Count()) > 5 {
-		return MatchResult{StatusDifferent, ReasonPageCount}
+	if aParsedPages.Err != nil && bParsedPages.Err != nil {
+		if absInt(aParsedPages.Count()-bParsedPages.Count()) > 5 {
+			return MatchResult{StatusDifferent, ReasonPageCount}
+		}
 	}
 	if aAuthors.Equals(bAuthors) &&
 		a.ContainerID == b.ContainerID &&
@@ -335,7 +351,7 @@ func Verify(a, b Release, minTitleLength int) MatchResult {
 		return MatchResult{StatusStrong, ReasonTitleArtifact}
 	}
 	return MatchResult{
-		StatusUnknown,
+		StatusAmbiguous,
 		ReasonUnknown,
 	}
 }
@@ -471,7 +487,7 @@ func slugifyString(s string) string {
 			fmt.Fprintf(&buf, "%c", c)
 		}
 	}
-	return buf.String()
+	return strings.Join(strings.Fields(buf.String()), " ")
 }
 
 // looksLikeComponent returns true, if either a looks like a component of b, or vice versa.
