@@ -115,17 +115,28 @@ type Release struct {
 			Type string `json:"type,omitempty"`
 		} `json:"crossref,omitempty"`
 		DataCite struct {
-			MetadataVersion int `json:"metadataVersion,omitempty"`
-			Relations       []struct {
-				RelatedIdentifierType string `json:"relatedIdentifierType,omitempty"`
-				RelatedIdentifier     string `json:"relatedIdentifier,omitempty"`
-			} `json:"relations,omitempty"`
+			MetadataVersion int                `json:"metadataVersion,omitempty"`
+			Relations       []DataCiteRelation `json:"relations,omitempty"`
 		} `json:"datacite,omitempty"`
 		Skate struct {
 			// Mark as converted.
 			Status string `json:"status,omitempty"`
 		} `json:"skate,omitempty"`
 	} `json:"extra,omitempty"`
+}
+
+type DataCiteRelation struct {
+	RelatedIdentifierType  string      `json:"relatedIdentifierType,omitempty"`
+	RelatedIdentifierValue interface{} `json:"relatedIdentifier,omitempty"`
+}
+
+func (r *DataCiteRelation) RelatedIdentifier() string {
+	switch v := r.RelatedIdentifierValue.(type) {
+	case string:
+		return v
+	default:
+		return fmt.Sprintf("%v", v)
+	}
 }
 
 func (r *Release) Subtitle() (result []string) {

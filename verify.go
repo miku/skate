@@ -176,7 +176,7 @@ func Verify(a, b *Release, minTitleLength int) MatchResult {
 				if strings.ToLower(rel.RelatedIdentifierType) != "doi" {
 					continue
 				}
-				ss.Add(rel.RelatedIdentifier)
+				ss.Add(rel.RelatedIdentifier())
 			}
 			return ss
 		}
