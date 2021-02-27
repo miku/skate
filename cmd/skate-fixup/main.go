@@ -69,6 +69,10 @@ func (r *ReleaseFixup) Fixup() error {
 	switch t := r.ReleaseYear.(type) {
 	case int:
 		r.Release.ReleaseYear = t
+	case float64:
+		r.Release.ReleaseYear = int(t)
+	case nil:
+		// do nothing
 	case string:
 		v, err := strconv.Atoi(t)
 		if err != nil {
@@ -76,15 +80,17 @@ func (r *ReleaseFixup) Fixup() error {
 		}
 		r.Release.ReleaseYear = v
 	default:
-		return fmt.Errorf("no fixup available for %T", t)
+		return fmt.Errorf("no fixup available for release year %T", t)
 	}
 	switch t := r.Extra.Subtitle.(type) {
 	case string:
 		r.Release.Extra.Subtitle = []string{t}
 	case []string:
 		r.Release.Extra.Subtitle = t
+	case nil:
+		// do nothing
 	default:
-		return fmt.Errorf("no fixup available for %T", t)
+		return fmt.Errorf("no fixup available for extra.subtitle %T", t)
 	}
 	return nil
 }
