@@ -97,7 +97,7 @@ func main() {
 			}
 			br.SourceReleaseStage = release.ReleaseStage
 			br.SourceWorkIdent = release.WorkID
-			br.SourceYear = strconv.Itoa(release.ReleaseYear)
+			br.SourceYear = strconv.Itoa(release.ReleaseYear())
 			if err := FetchRelease(target, &release); err != nil {
 				log.Fatal(err)
 			}

@@ -1,6 +1,9 @@
 package skate
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 // RefToRelease converts a ref to a release. Set a extra.skate.status flag to
 // be able to distinguish coverted entities later.
@@ -26,8 +29,7 @@ func RefToRelease(ref *Ref) (*Release, error) {
 	release.Volume = b.Volume
 	release.Issue = b.Issue
 	release.Pages = b.Pages
-	release.ReleaseYear = ref.ReleaseYear
-	// release.ReleaseYear = strconv.Itoa(ref.ReleaseYear)
+	release.ReleaseYearValue = fmt.Sprintf("%d", ref.ReleaseYear)
 	for i, name := range b.ContribRawNames {
 		contribs[i].Index = i
 		contribs[i].RawName = name
@@ -97,18 +99,18 @@ type Release struct {
 		Locator string `json:"locator,omitempty"`
 		Year    int64  `json:"year,omitempty"`
 	} `json:"refs"`
-	ReleaseDate  string `json:"release_date,omitempty"`
-	ReleaseYear  int    `json:"release_year,omitempty"` // might be int or str
-	ReleaseStage string `json:"release_stage,omitempty"`
-	ReleaseType  string `json:"release_type,omitempty"`
-	Issue        string `json:"issue,omitempty"`
-	Volume       string `json:"volume,omitempty"`
-	Pages        string `json:"pages,omitempty"`
-	Title        string `json:"title,omitempty"`
-	WorkID       string `json:"work_id,omitempty"`
-	Extra        struct {
-		ContainerName string   `json:"container_name"`
-		Subtitle      []string `json:"subtitle,omitempty"`
+	ReleaseDate      string      `json:"release_date,omitempty"`
+	ReleaseYearValue interface{} `json:"release_year,omitempty"` // might be int or str
+	ReleaseStage     string      `json:"release_stage,omitempty"`
+	ReleaseType      string      `json:"release_type,omitempty"`
+	Issue            string      `json:"issue,omitempty"`
+	Volume           string      `json:"volume,omitempty"`
+	Pages            string      `json:"pages,omitempty"`
+	Title            string      `json:"title,omitempty"`
+	WorkID           string      `json:"work_id,omitempty"`
+	Extra            struct {
+		ContainerName string      `json:"container_name"`
+		SubtitleValue interface{} `json:"subtitle,omitempty"` // []str or str
 		Crossref      struct {
 			Type string `json:"type,omitempty"`
 		} `json:"crossref,omitempty"`
@@ -124,6 +126,38 @@ type Release struct {
 			Status string `json:"status,omitempty"`
 		} `json:"skate,omitempty"`
 	} `json:"extra,omitempty"`
+}
+
+func (r *Release) Subtitle() (result []string) {
+	switch v := r.Extra.SubtitleValue.(type) {
+	case []interface{}:
+		for _, e := range v {
+			result = append(result, fmt.Sprintf("%v", e))
+		}
+		return result
+	case []string:
+		return v
+	case string:
+		return []string{v}
+	}
+	return []string{}
+}
+
+func (r *Release) ReleaseYear() int {
+	switch v := r.ReleaseYearValue.(type) {
+	case int:
+		return v
+	case float64:
+		return int(v)
+	case string:
+		w, err := strconv.Atoi(v)
+		if err != nil {
+			return 0
+		}
+		return w
+	default:
+		return 0
+	}
 }
 
 // BiblioRef as a prototype for indexing.

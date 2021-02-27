@@ -33,7 +33,7 @@ func main() {
 	switch *mode {
 	case "unmatched":
 		f = func(p []byte) ([]byte, error) {
-			var cluster skate.Cluster
+			var cluster skate.ClusterResult
 			if err := json.Unmarshal(p, &cluster); err != nil {
 				if *bestEffort {
 					log.Printf("%v", err)
@@ -54,7 +54,7 @@ func main() {
 		}
 	case "count":
 		f = func(p []byte) ([]byte, error) {
-			var cluster skate.Cluster
+			var cluster skate.ClusterResult
 			if err := json.Unmarshal(p, &cluster); err != nil {
 				if *bestEffort {
 					log.Printf("%v", err)
@@ -75,7 +75,7 @@ func main() {
 		}
 	default:
 		f = func(p []byte) ([]byte, error) {
-			var cluster skate.Cluster
+			var cluster skate.ClusterResult
 			if err := json.Unmarshal(p, &cluster); err != nil {
 				return nil, err
 			}

@@ -135,9 +135,11 @@ func Verify(a, b *Release, minTitleLength int) MatchResult {
 		if a.ExtIDs.DOI+"u" == b.ExtIDs.DOI || b.ExtIDs.DOI+"u" == a.ExtIDs.DOI {
 			return MatchResult{StatusStrong, ReasonCustomBSIUndated}
 		}
+		aSubtitle := a.Subtitle()
+		bSubtitle := b.Subtitle()
 		if a.Title != "" && a.Title == b.Title &&
-			((len(a.Extra.Subtitle) > 0 && a.Extra.Subtitle[0] != "" && len(b.Extra.Subtitle) == 0) ||
-				(len(a.Extra.Subtitle) == 0 && len(b.Extra.Subtitle) > 0 && b.Extra.Subtitle[0] != "")) {
+			((len(aSubtitle) > 0 && aSubtitle[0] != "" && len(bSubtitle) == 0) ||
+				(len(aSubtitle) == 0 && len(bSubtitle) > 0 && bSubtitle[0] != "")) {
 			return MatchResult{StatusStrong, ReasonCustomBSISubdoc}
 		}
 	}
@@ -223,7 +225,7 @@ func Verify(a, b *Release, minTitleLength int) MatchResult {
 	bSlugTitle := strings.TrimSpace(strings.Replace(slugifyString(b.Title), "\n", " ", -1))
 
 	if aSlugTitle == bSlugTitle {
-		if a.ReleaseYear != 0 && b.ReleaseYear != 0 && absInt(a.ReleaseYear-b.ReleaseYear) > 40 {
+		if a.ReleaseYear() != 0 && b.ReleaseYear() != 0 && absInt(a.ReleaseYear()-b.ReleaseYear()) > 40 {
 			return MatchResult{StatusDifferent, ReasonYear}
 		}
 	}
@@ -241,8 +243,10 @@ func Verify(a, b *Release, minTitleLength int) MatchResult {
 		}
 	}
 	if aSlugTitle == bSlugTitle {
-		for _, aSub := range a.Extra.Subtitle {
-			for _, bSub := range b.Extra.Subtitle {
+		aSubtitle := a.Subtitle()
+		bSubtitle := b.Subtitle()
+		for _, aSub := range aSubtitle {
+			for _, bSub := range bSubtitle {
 				if slugifyString(aSub) != slugifyString(bSub) {
 					return MatchResult{StatusDifferent, ReasonSubtitle}
 				}
@@ -265,7 +269,7 @@ func Verify(a, b *Release, minTitleLength int) MatchResult {
 	bSlugAuthors := set.FromSlice(mapString(slugifyString, bAuthors.Slice()))
 	if aTitleLower == bTitleLower {
 		if aAuthors.Len() > 0 && aAuthors.Equals(bAuthors) {
-			if a.ReleaseYear > 0 && b.ReleaseYear > 0 && absInt(a.ReleaseYear-b.ReleaseYear) > 4 {
+			if a.ReleaseYear() > 0 && b.ReleaseYear() > 0 && absInt(a.ReleaseYear()-b.ReleaseYear()) > 4 {
 				return MatchResult{StatusDifferent, ReasonYear}
 			}
 			return MatchResult{StatusExact, ReasonTitleAuthorMatch}
@@ -277,7 +281,7 @@ func Verify(a, b *Release, minTitleLength int) MatchResult {
 		}
 	}
 	if a.Title != "" && a.Title == b.Title {
-		if a.ReleaseYear > 0 && b.ReleaseYear > 0 && absInt(a.ReleaseYear-b.ReleaseYear) > 2 {
+		if a.ReleaseYear() > 0 && b.ReleaseYear() > 0 && absInt(a.ReleaseYear()-b.ReleaseYear()) > 2 {
 			return MatchResult{StatusDifferent, ReasonYear}
 		}
 	}
@@ -293,13 +297,13 @@ func Verify(a, b *Release, minTitleLength int) MatchResult {
 	if aSlugTitle != "" && bSlugTitle != "" &&
 		strings.ReplaceAll(aSlugTitle, " ", "") == strings.ReplaceAll(bSlugTitle, " ", "") {
 		if aSlugAuthors.Intersection(bSlugAuthors).Len() > 0 {
-			if a.ReleaseYear > 0 && b.ReleaseYear > 0 && absInt(a.ReleaseYear-b.ReleaseYear) > 4 {
+			if a.ReleaseYear() > 0 && b.ReleaseYear() > 0 && absInt(a.ReleaseYear()-b.ReleaseYear()) > 4 {
 				return MatchResult{StatusDifferent, ReasonYear}
 			}
 			return MatchResult{StatusStrong, ReasonSlugTitleAuthorMatch}
 		}
 	}
-	if a.ReleaseYear > 0 && a.ReleaseYear == b.ReleaseYear && aTitleLower == bTitleLower {
+	if a.ReleaseYear() > 0 && a.ReleaseYear() == b.ReleaseYear() && aTitleLower == bTitleLower {
 		if (a.ExtIDs.PMID != "" && b.ExtIDs.DOI != "") || (b.ExtIDs.PMID != "" && a.ExtIDs.DOI != "") {
 			return MatchResult{StatusStrong, ReasonPMIDDOIPair}
 		}
@@ -346,7 +350,7 @@ func Verify(a, b *Release, minTitleLength int) MatchResult {
 	}
 	if aAuthors.Equals(bAuthors) &&
 		a.ContainerID == b.ContainerID &&
-		a.ReleaseYear == b.ReleaseYear &&
+		a.ReleaseYear() == b.ReleaseYear() &&
 		a.Title != b.Title &&
 		(strings.Contains(a.Title, b.Title) || strings.Contains(b.Title, a.Title)) {
 		return MatchResult{StatusStrong, ReasonTitleArtifact}
