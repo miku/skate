@@ -11,6 +11,8 @@ import (
 	"github.com/miku/skate/set"
 )
 
+// This file is a port of fuzzycat.verify to Go.
+
 type (
 	// Status represents match strength.
 	Status int
