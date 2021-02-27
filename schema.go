@@ -1,5 +1,7 @@
 package skate
 
+import "fmt"
+
 // RefToRelease converts a ref to a release. Set a extra.skate.status flag to
 // be able to distinguish coverted entities later.
 func RefToRelease(ref *Ref) (*Release, error) {
@@ -148,8 +150,17 @@ type BiblioRef struct {
 	TargetCSL              string `json:"target_csl,omitempty"`
 }
 
-// Cluster results.
-type Cluster struct {
-	Key    string    `json:"k"`
-	Values []Release `json:"v"`
+// ClusterResult results.
+type ClusterResult struct {
+	Key    string     `json:"k"`
+	Values []*Release `json:"v"`
+}
+
+func (cr *ClusterResult) NonRef() (*Release, error) {
+	for _, re := range cr.Values {
+		if re.Extra.Skate.Status != "ref" {
+			return re, nil
+		}
+	}
+	return nil, fmt.Errorf("no release found")
 }

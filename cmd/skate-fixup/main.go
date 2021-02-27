@@ -3,15 +3,17 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/miku/skate"
 	"github.com/miku/skate/parallel"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 func main() {
 	pp := parallel.NewProcessor(os.Stdin, os.Stdout, func(p []byte) ([]byte, error) {
@@ -85,6 +87,12 @@ func (r *ReleaseFixup) Fixup() error {
 	switch t := r.Extra.Subtitle.(type) {
 	case string:
 		r.Release.Extra.Subtitle = []string{t}
+	case []interface{}:
+		var ss []string
+		for _, v := range t {
+			ss = append(ss, fmt.Sprintf("%v", v))
+		}
+		r.Release.Extra.Subtitle = ss
 	case []string:
 		r.Release.Extra.Subtitle = t
 	case nil:
