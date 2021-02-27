@@ -53,7 +53,6 @@ func main() {
 					return nil, err
 				}
 			}
-			log.Printf("writing %db", buf.Len())
 			return buf.Bytes(), nil
 		})
 		pp.NumWorkers = *numWorkers
