@@ -67,11 +67,10 @@ func TestVerify(t *testing.T) {
 		t = strings.Replace(strings.ToLower(t), ".", "", -1)
 		return s == t
 	}
-	for i, line := range strings.Split(string(data), "\n") {
+	for _, line := range strings.Split(string(data), "\n") {
 		line = strings.TrimSpace(line)
 		fields := strings.Split(line, ",")
 		if len(fields) < 4 {
-			t.Logf("skipping line %d: %s", i+1, line)
 			continue
 		}
 		a, b, status, reason := fields[0], fields[1], fields[2], fields[3]

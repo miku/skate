@@ -305,7 +305,7 @@ func Verify(a, b *Release, minTitleLength int) MatchResult {
 	if a.ExtIDs.Jstor != "" && b.ExtIDs.Jstor != "" && a.ExtIDs.Jstor != b.ExtIDs.Jstor {
 		return MatchResult{StatusDifferent, ReasonJstorID}
 	}
-	if a.ContainerID == b.ContainerID && a.ExtIDs.DOI != b.ExtIDs.DOI &&
+	if a.ContainerID != "" && a.ContainerID == b.ContainerID && a.ExtIDs.DOI != b.ExtIDs.DOI &&
 		doiPrefix(a.ExtIDs.DOI) != "10.1126" &&
 		doiPrefix(a.ExtIDs.DOI) == doiPrefix(b.ExtIDs.DOI) {
 		return MatchResult{StatusDifferent, ReasonSharedDOIPrefix}
