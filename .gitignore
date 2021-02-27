@@ -20,6 +20,7 @@
 /skate-cluster-stats
 /skate-biblioref
 /skate-verify
+/skate-fixup
 packaging/debian/skate/usr
 skate_*_amd64.deb
 

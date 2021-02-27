@@ -62,8 +62,12 @@ func main() {
 				return nil, err
 			}
 			for _, e := range doc.Docs {
+				if e.Extra.Skate.Status != "ref" {
+					continue
+				}
 				result := skate.Verify(pivot, e, 5)
-				if _, err := fmt.Fprintf(&buf, "%s %s %s %s\n", pivot.Ident, e.Ident, result.Status, result.Reason); err != nil {
+				if _, err := fmt.Fprintf(&buf, "%s %s %s %s\n",
+					pivot.Ident, e.Ident, result.Status, result.Reason); err != nil {
 					return nil, err
 				}
 			}
