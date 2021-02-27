@@ -7,7 +7,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -15,6 +14,7 @@ import (
 	"regexp"
 	"runtime"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/miku/skate"
 	"github.com/miku/skate/parallel"
 )
@@ -23,6 +23,8 @@ var (
 	numWorkers = flag.Int("w", runtime.NumCPU(), "number of workers")
 	batchSize  = flag.Int("b", 100000, "batch size")
 	mode       = flag.String("m", "ref", "mode: ref, zip")
+
+	json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 	// "release_year":"2011"
 	PatYear = regexp.MustCompile(`"release_year":("[0-9]{4,4}")`)
