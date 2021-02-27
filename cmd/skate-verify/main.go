@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"runtime"
 
 	"github.com/miku/skate"
@@ -22,6 +23,9 @@ var (
 	numWorkers = flag.Int("w", runtime.NumCPU(), "number of workers")
 	batchSize  = flag.Int("b", 100000, "batch size")
 	mode       = flag.String("m", "ref", "mode: ref, zip")
+
+	// "release_year":"2011"
+	PatYear = regexp.MustCompile(`"release_year":("[0-9]{4,4}")`)
 )
 
 type Doc struct {

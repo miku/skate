@@ -315,7 +315,6 @@ func Verify(a, b *Release, minTitleLength int) MatchResult {
 	if aAuthors.Len() > 0 && aSlugAuthors.Intersection(bSlugAuthors).IsEmpty() {
 		numAuthors := set.Min(aSlugAuthors, bSlugAuthors)
 		score := averageScore(aSlugAuthors, bSlugAuthors)
-		// log.Println(a.Ident, "xx", numAuthors, score)
 		if (numAuthors < 3 && score > 0.9) || (numAuthors >= 3 && score > 0.5) {
 			return MatchResult{StatusStrong, ReasonTokenizedAuthors}
 		}
