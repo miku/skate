@@ -130,3 +130,10 @@ takes 46min, and we can iterate of 2-5M lines/s.
 
 The `skate-ref-to-release` command is a simple one-off schema converter (mostly
 decode and encode), which runs over ~1.7B docs in 81min - about 349794 docs/s.
+
+The `skate-verify` command is a port of the fuzzycat.verify (Python)
+implementation; it can run 70K verifications/s; e.g. when running over refs, we
+can verify 1M clusters in less than 3min (and a full 40M set in less than 2h;
+that's 25x faster than the Python/Parallel version).
+
+![](static/skate.png)
