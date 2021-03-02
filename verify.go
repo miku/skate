@@ -1,6 +1,7 @@
 package skate
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
@@ -124,8 +125,29 @@ func RefCluster(p []byte) ([]byte, error) {
 // ZipVerify takes two readers (tsv of id, key, doc) and will do verification
 // on matching groups.
 func ZipVerify(refsReader, releasesReader io.Reader, w io.Writer) error {
-	// refs := bufio.NewReader(refsReader)
-	// rels := bufio.NewReader(releasesReader)
+	var (
+		ar         = bufio.NewReader(refsReader)
+		br         = bufio.NewReader(releasesReader)
+		parts      []string
+		aKey, bKey string // current keys
+	)
+	for {
+		line, err := ar.ReadString('\n')
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		line = strings.TrimSpace(line)
+		if len(line) == 0 {
+			continue
+		}
+		parts = strings.Split(line, "\t") // 0: id, 1: key, 2: doc
+		if len(parts) != 3 {
+			return fmt.Errorf("malformed line: %s", line)
+		}
+	}
 	return nil
 }
 
