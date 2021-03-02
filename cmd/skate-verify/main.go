@@ -2,13 +2,11 @@
 // fuzzycat.verify, but make it faster (e.g. fuzzycat took about 50h for the
 // complete set).
 //
-// TODO
+// Currently: about 2h for 40M clusters.
 package main
 
 import (
-	"bytes"
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"runtime"
@@ -20,11 +18,13 @@ import (
 )
 
 var (
-	numWorkers = flag.Int("w", runtime.NumCPU(), "number of workers")
-	batchSize  = flag.Int("b", 10000, "batch size")
-	mode       = flag.String("m", "ref", "mode: ref, zip")
-	cpuProfile = flag.String("cpuprofile", "", "write cpu profile to file")
-	memProfile = flag.String("memprofile", "", "write heap profile to file (go tool pprof -png --alloc_objects program mem.pprof > mem.png)")
+	numWorkers   = flag.Int("w", runtime.NumCPU(), "number of workers")
+	batchSize    = flag.Int("b", 10000, "batch size")
+	mode         = flag.String("m", "ref", "mode: ref, zip")
+	refsFile     = flag.String("refs", "", "refs, tsv, sorted by key (zip mode only)")
+	releasesFile = flag.String("releases", "", "releases, tsv, sorted by key (zip mode only)")
+	cpuProfile   = flag.String("cpuprofile", "", "write cpu profile to file")
+	memProfile   = flag.String("memprofile", "", "write heap profile to file (go tool pprof -png --alloc_objects program mem.pprof > mem.png)")
 
 	json = jsoniter.ConfigCompatibleWithStandardLibrary
 )
@@ -40,32 +40,15 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 	switch *mode {
+	case "zip":
+		// Take two "sorted key files" (one refs, one releases) and run
+		// verification across groups.
+		if *refsFile == "" || *releasesFile == "" {
+			log.Fatal("zip mode requires -refs and -release to be set")
+		}
 	case "ref":
 		// https://git.io/JtACz
-		pp := parallel.NewProcessor(os.Stdin, os.Stdout, func(p []byte) ([]byte, error) {
-			var (
-				cr  *skate.ClusterResult
-				buf bytes.Buffer
-			)
-			if err := json.Unmarshal(p, &cr); err != nil {
-				return nil, err
-			}
-			pivot, err := cr.OneNonRef()
-			if err != nil {
-				return nil, err
-			}
-			for _, re := range cr.Values {
-				if re.Extra.Skate.Status != "ref" {
-					continue
-				}
-				result := skate.Verify(pivot, re, 5)
-				if _, err := fmt.Fprintf(&buf, "%s %s %s %s\n",
-					pivot.Ident, re.Ident, result.Status, result.Reason); err != nil {
-					return nil, err
-				}
-			}
-			return buf.Bytes(), nil
-		})
+		pp := parallel.NewProcessor(os.Stdin, os.Stdout, skate.RefCluster)
 		pp.NumWorkers = *numWorkers
 		pp.BatchSize = *batchSize
 		if err := pp.Run(); err != nil {

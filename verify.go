@@ -91,6 +91,33 @@ var (
 	PatPages           = regexp.MustCompile(`([0-9]{1,})-([0-9]{1,})`)
 )
 
+// RefCluster deserialized a single cluster document and returns a tabular file
+// with identifiers, match status and reason.
+func RefCluster(p []byte) ([]byte, error) {
+	var (
+		cr  *ClusterResult
+		buf bytes.Buffer
+	)
+	if err := json.Unmarshal(p, &cr); err != nil {
+		return nil, err
+	}
+	pivot, err := cr.OneNonRef()
+	if err != nil {
+		return nil, err
+	}
+	for _, re := range cr.Values {
+		if re.Extra.Skate.Status != "ref" {
+			continue
+		}
+		result := Verify(pivot, re, 5)
+		if _, err := fmt.Fprintf(&buf, "%s %s %s %s\n",
+			pivot.Ident, re.Ident, result.Status, result.Reason); err != nil {
+			return nil, err
+		}
+	}
+	return buf.Bytes(), nil
+}
+
 // Verify follows the fuzzycat (Python) implementation of this function. The Go
 // version cab be used for large batch processing (where the Python version
 // might take two or more days).
