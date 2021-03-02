@@ -3,6 +3,7 @@ package skate
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"regexp"
 	"strconv"
 	"strings"
@@ -91,6 +92,8 @@ var (
 	PatPages           = regexp.MustCompile(`([0-9]{1,})-([0-9]{1,})`)
 )
 
+// XXX: add all pairs verification (e.g. self-match).
+
 // RefCluster deserialized a single cluster document and returns a tabular file
 // with identifiers, match status and reason.
 func RefCluster(p []byte) ([]byte, error) {
@@ -116,6 +119,14 @@ func RefCluster(p []byte) ([]byte, error) {
 		}
 	}
 	return buf.Bytes(), nil
+}
+
+// ZipVerify takes two readers (tsv of id, key, doc) and will do verification
+// on matching groups.
+func ZipVerify(refsReader, releasesReader io.Reader, w io.Writer) error {
+	// refs := bufio.NewReader(refsReader)
+	// rels := bufio.NewReader(releasesReader)
+	return nil
 }
 
 // Verify follows the fuzzycat (Python) implementation of this function. The Go
