@@ -64,7 +64,10 @@ type Ref struct {
 	WorkIdent    string `json:"work_ident,omitempty"`
 }
 
-// Release document.
+// Release document. Note that we may have varying types for some fields.
+// Mitigation for now is to make the field an interface{}, name the field
+// "...Value" and to add a method with the field name, doing type assertion.
+// Example: ReleaseYearValue, ReleaseYear() int, etc.
 type Release struct {
 	ContainerID   string `json:"container_id,omitempty"`
 	ContainerName string `json:"container_name,omitempty"`
@@ -125,20 +128,7 @@ type Release struct {
 	} `json:"extra,omitempty"`
 }
 
-type DataCiteRelation struct {
-	RelatedIdentifierType  string      `json:"relatedIdentifierType,omitempty"`
-	RelatedIdentifierValue interface{} `json:"relatedIdentifier,omitempty"`
-}
-
-func (r *DataCiteRelation) RelatedIdentifier() string {
-	switch v := r.RelatedIdentifierValue.(type) {
-	case string:
-		return v
-	default:
-		return fmt.Sprintf("%v", v)
-	}
-}
-
+// Subtitle returns a slice of subtitle strings.
 func (r *Release) Subtitle() (result []string) {
 	switch v := r.Extra.SubtitleValue.(type) {
 	case []interface{}:
@@ -154,6 +144,7 @@ func (r *Release) Subtitle() (result []string) {
 	return []string{}
 }
 
+// ReleaseYear returns year as int, no further validity checks.
 func (r *Release) ReleaseYear() int {
 	switch v := r.ReleaseYearValue.(type) {
 	case int:
@@ -168,6 +159,20 @@ func (r *Release) ReleaseYear() int {
 		return w
 	default:
 		return 0
+	}
+}
+
+type DataCiteRelation struct {
+	RelatedIdentifierType  string      `json:"relatedIdentifierType,omitempty"`
+	RelatedIdentifierValue interface{} `json:"relatedIdentifier,omitempty"`
+}
+
+func (r *DataCiteRelation) RelatedIdentifier() string {
+	switch v := r.RelatedIdentifierValue.(type) {
+	case string:
+		return v
+	default:
+		return fmt.Sprintf("%v", v)
 	}
 }
 
@@ -201,7 +206,9 @@ type ClusterResult struct {
 	Values []*Release `json:"v"`
 }
 
-func (cr *ClusterResult) NonRef() (*Release, error) {
+// NonRef returns the first non-reference release found in the cluster, or an
+// error, if none has been found.
+func (cr *ClusterResult) OneNonRef() (*Release, error) {
 	for _, re := range cr.Values {
 		if re.Extra.Skate.Status != "ref" {
 			return re, nil

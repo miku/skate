@@ -50,7 +50,7 @@ func main() {
 			if err := json.Unmarshal(p, &cr); err != nil {
 				return nil, err
 			}
-			pivot, err := cr.NonRef()
+			pivot, err := cr.OneNonRef()
 			if err != nil {
 				return nil, err
 			}
