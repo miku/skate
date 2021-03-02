@@ -47,27 +47,9 @@ func TestVerify(t *testing.T) {
 	if err != nil {
 		t.Errorf("could not load test data: %v", err)
 	}
-	// parseRelease uses the testdata dir to load a release
-	parseRelease := func(ident string) (*Release, error) {
-		filename := fmt.Sprintf("testdata/release/%s", ident)
-		data, err := ioutil.ReadFile(filename)
-		if err != nil {
-			return nil, err
-		}
-		var r Release
-		if err := json.Unmarshal(data, &r); err != nil {
-			return nil, err
-		}
-		return &r, nil
-	}
-	// statusEquals compares status variants
-	statusEquals := func(s, t string) bool {
-		// StatusExact, Status.EXACT
-		s = strings.Replace(strings.ToLower(s), ".", "", -1)
-		t = strings.Replace(strings.ToLower(t), ".", "", -1)
-		return s == t
-	}
-	for _, line := range strings.Split(string(data), "\n") {
+	cases := strings.Split(string(data), "\n")
+	t.Logf("running %d test cases from https://git.io/JtjRL", len(cases))
+	for _, line := range cases {
 		line = strings.TrimSpace(line)
 		fields := strings.Split(line, ",")
 		if len(fields) < 4 {
@@ -90,4 +72,26 @@ func TestVerify(t *testing.T) {
 			t.Errorf("%s %s: got %s (%s), want %s (%s) ", a, b, result.Status, result.Reason, status, reason)
 		}
 	}
+}
+
+// parseRelease uses the testdata dir to load a release.
+func parseRelease(ident string) (*Release, error) {
+	filename := fmt.Sprintf("testdata/release/%s", ident)
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	var r Release
+	if err := json.Unmarshal(data, &r); err != nil {
+		return nil, err
+	}
+	return &r, nil
+}
+
+// statusEquals compares status variants (from fuzzycat, skate), e.g.
+// StatusExact, Status.EXACT
+func statusEquals(s, t string) bool {
+	s = strings.Replace(strings.ToLower(s), ".", "", -1)
+	t = strings.Replace(strings.ToLower(t), ".", "", -1)
+	return s == t
 }
