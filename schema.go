@@ -216,3 +216,13 @@ func (cr *ClusterResult) OneNonRef() (*Release, error) {
 	}
 	return nil, fmt.Errorf("no release found")
 }
+
+// GroupedBag holds two groups of zero or more docs.
+type GroupedBag struct {
+	A []string
+	B []string
+}
+
+func (b *GroupedBag) String() string {
+	return fmt.Sprintf("<Bag A/B %d/%d>", len(b.A), len(b.B))
+}

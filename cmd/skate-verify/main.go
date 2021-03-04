@@ -21,8 +21,8 @@ var (
 	numWorkers   = flag.Int("w", runtime.NumCPU(), "number of workers")
 	batchSize    = flag.Int("b", 10000, "batch size")
 	mode         = flag.String("m", "ref", "mode: ref, zip")
-	refsFile     = flag.String("refs", "", "refs, tsv, sorted by key (zip mode only)")
-	releasesFile = flag.String("releases", "", "releases, tsv, sorted by key (zip mode only)")
+	releasesFile = flag.String("R", "", "releases, tsv, sorted by key (zip mode only)")
+	refsFile     = flag.String("F", "", "refs, tsv, sorted by key (zip mode only)")
 	cpuProfile   = flag.String("cpuprofile", "", "write cpu profile to file")
 	memProfile   = flag.String("memprofile", "", "write heap profile to file (go tool pprof -png --alloc_objects program mem.pprof > mem.png)")
 
@@ -46,7 +46,19 @@ func main() {
 		if *refsFile == "" || *releasesFile == "" {
 			log.Fatal("zip mode requires -refs and -release to be set")
 		}
-		// XXX: a generic zip run
+		f, err := os.Open(*releasesFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+		g, err := os.Open(*refsFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer g.Close()
+		if err := skate.ZipVerify(f, g, os.Stdout); err != nil {
+			log.Fatal(err)
+		}
 	case "ref":
 		// https://git.io/JtACz
 		pp := parallel.NewProcessor(os.Stdin, os.Stdout, skate.RefCluster)

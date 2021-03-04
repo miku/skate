@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -123,46 +124,87 @@ func RefCluster(p []byte) ([]byte, error) {
 }
 
 // ZipVerify takes two readers (tsv of id, key, doc) and will do verification
-// on matching groups.
-func ZipVerify(refsReader, releasesReader io.Reader, w io.Writer) error {
+// on matching groups. Sketch: Advance release by one line, iterate refs and
+// collect matching line from refs - that's the cluster. Hand over the cluster
+// to a verifier.
+func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 	var (
-		ar         = bufio.NewReader(refsReader)
-		br         = bufio.NewReader(releasesReader)
-		cr         = ar
-		parts      []string
-		aKey, bKey string // the current keys
+		ra     = bufio.NewReader(releases)
+		rb     = bufio.NewReader(refs)
+		ka, kb string
 	)
-	toggleReader := func() {
-		if cr == ar {
-			cr = br
-		} else {
-			cr = ar
+	deriveKey := func(line string) string {
+		parts := strings.Fields(line)
+		if len(parts) == 3 {
+			return parts[1]
 		}
+		return ""
 	}
-	nextLine := func(r bufio.Reader) (line string, err error) {
-		for {
-			line, err = r.ReadString('\n')
-			if err != nil {
-				return "", err
-			}
-			line = strings.TrimSpace(line)
-			if len(line) == 0 {
-				continue
-			}
-		}
-		return line, nil
-	}
+
 	for {
-		line, err := nextLine(cr)
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-		parts = strings.Split(line, "\t") // 0: id, 1: key, 2: doc
-		if len(parts) != 3 {
-			return fmt.Errorf("malformed line: %s", line)
+		switch {
+		case ka == "":
+			for ka != "" {
+				line, err := ra.ReadString('\n')
+				if err == io.EOF {
+					return nil
+				}
+				ka = deriveKey(line)
+			}
+		case kb == "":
+			for kb != "" {
+				line, err := rb.ReadString('\n')
+				if err == io.EOF {
+					return nil
+				}
+				kb = deriveKey(line)
+			}
+		case ka < kb:
+			for ka < kb {
+				line, err := ra.ReadString('\n')
+				if err == io.EOF {
+					return nil
+				}
+				ka = deriveKey(line)
+			}
+		case ka > kb:
+			for ka > kb {
+				line, err := rb.ReadString('\n')
+				if err == io.EOF {
+					return nil
+				}
+				kb = deriveKey(line)
+			}
+		case ka == kb:
+			// Collect both groups and hand off.
+			bag := &GroupedBag{}
+			for {
+				line, err := ra.ReadString('\n')
+				if err == io.EOF {
+					return nil
+				}
+				k := deriveKey(line)
+				if k == ka {
+					bag.A = append(bag.A, line)
+					ka = k
+				} else {
+					break
+				}
+			}
+			for {
+				line, err := rb.ReadString('\n')
+				if err == io.EOF {
+					return nil
+				}
+				k := deriveKey(line)
+				if k == kb {
+					bag.B = append(bag.B, line)
+					kb = k
+				} else {
+					break
+				}
+			}
+			log.Printf("found bag: %s", bag)
 		}
 	}
 	return nil
