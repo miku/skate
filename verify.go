@@ -128,20 +128,37 @@ func ZipVerify(refsReader, releasesReader io.Reader, w io.Writer) error {
 	var (
 		ar         = bufio.NewReader(refsReader)
 		br         = bufio.NewReader(releasesReader)
+		cr         = ar
 		parts      []string
-		aKey, bKey string // current keys
+		aKey, bKey string // the current keys
 	)
+	toggleReader := func() {
+		if cr == ar {
+			cr = br
+		} else {
+			cr = ar
+		}
+	}
+	nextLine := func(r bufio.Reader) (line string, err error) {
+		for {
+			line, err = r.ReadString('\n')
+			if err != nil {
+				return "", err
+			}
+			line = strings.TrimSpace(line)
+			if len(line) == 0 {
+				continue
+			}
+		}
+		return line, nil
+	}
 	for {
-		line, err := ar.ReadString('\n')
+		line, err := nextLine(cr)
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
 			return err
-		}
-		line = strings.TrimSpace(line)
-		if len(line) == 0 {
-			continue
 		}
 		parts = strings.Split(line, "\t") // 0: id, 1: key, 2: doc
 		if len(parts) != 3 {

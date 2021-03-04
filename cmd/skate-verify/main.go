@@ -46,6 +46,7 @@ func main() {
 		if *refsFile == "" || *releasesFile == "" {
 			log.Fatal("zip mode requires -refs and -release to be set")
 		}
+		// XXX: a generic zip run
 	case "ref":
 		// https://git.io/JtACz
 		pp := parallel.NewProcessor(os.Stdin, os.Stdout, skate.RefCluster)
