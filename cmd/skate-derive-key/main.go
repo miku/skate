@@ -33,12 +33,13 @@ import (
 )
 
 var (
-	keyFuncName = flag.String("f", "tsand", "key function name, other: title, tnorm, tnysi, tsand")
-	numWorkers  = flag.Int("w", runtime.NumCPU(), "number of workers")
-	batchSize   = flag.Int("b", 50000, "batch size")
-	verbose     = flag.Bool("verbose", false, "show progress")
-	bestEffort  = flag.Bool("B", false, "best effort")
-	logFile     = flag.String("log", "", "log filename")
+	keyFuncName   = flag.String("f", "tsand", "key function name, other: title, tnorm, tnysi, tsand")
+	numWorkers    = flag.Int("w", runtime.NumCPU(), "number of workers")
+	batchSize     = flag.Int("b", 50000, "batch size")
+	verbose       = flag.Bool("verbose", false, "show progress")
+	bestEffort    = flag.Bool("B", false, "best effort")
+	logFile       = flag.String("log", "", "log filename")
+	skipEmptyKeys = flag.Bool("skip-empty-keys", false, "omit docs without keys")
 
 	wsReplacer = strings.NewReplacer("\t", "", "\n", "")
 	keyOpts    = map[string]skate.IdentifierKeyFunc{
@@ -75,6 +76,9 @@ func main() {
 			return nil, err
 		}
 		ident, key = strings.TrimSpace(ident), strings.TrimSpace(key)
+		if *skipEmptyKeys && key == "" {
+			return nil, nil
+		}
 		v := fmt.Sprintf("%s\t%s\t%s\n", ident, key, wsReplacer.Replace(string(p)))
 		return []byte(v), nil
 	})
