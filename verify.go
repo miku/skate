@@ -182,7 +182,7 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 			}
 			log.Printf("forwarded [b] %d", i)
 		case ka < kb:
-			log.Printf("ka < kb, %s %s", ka, kb)
+			// log.Printf("ka < kb, %s %s", ka, kb)
 			for ka < kb {
 				line, err = ra.ReadString('\n')
 				if err == io.EOF {
@@ -195,7 +195,7 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 				ca = line
 			}
 		case ka > kb:
-			log.Printf("ka > kb, %s %s", ka, kb)
+			// log.Printf("ka > kb, %s %s", ka, kb)
 			for ka > kb {
 				line, err = rb.ReadString('\n')
 				if err == io.EOF {
@@ -208,7 +208,7 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 				cb = line
 			}
 		case ka == kb:
-			log.Printf("keys equal: %s %s", ka, kb)
+			// log.Printf("keys equal: %s %s", ka, kb)
 			// Collect both groups and hand off.
 			bag := &GroupedCluster{
 				A: []string{ca},
@@ -252,7 +252,7 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 					break
 				}
 			}
-			log.Printf("found bag: %s", bag)
+			log.Printf("cluster: %s", bag)
 		}
 	}
 	return nil

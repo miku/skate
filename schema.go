@@ -225,5 +225,5 @@ type GroupedCluster struct {
 }
 
 func (b *GroupedCluster) String() string {
-	return fmt.Sprintf("<GroupedCluster A/B %d/%d %v, %v>", len(b.A), len(b.B), b.A, b.B)
+	return fmt.Sprintf("<GroupedCluster A/B %d/%d>", len(b.A), len(b.B))
 }
