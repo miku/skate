@@ -2,7 +2,7 @@
 // fuzzycat.verify, but make it faster (e.g. fuzzycat took about 50h for the
 // complete set).
 //
-// Currently: about 2h for 40M clusters.
+// Currently: about 2h for 40M clusters (in "ref" mode).
 package main
 
 import (
@@ -44,7 +44,7 @@ func main() {
 		// Take two "sorted key files" (one refs, one releases) and run
 		// verification across groups.
 		if *refsFile == "" || *releasesFile == "" {
-			log.Fatal("zip mode requires -refs and -release to be set")
+			log.Fatal("zip mode requires -R and -F to be set")
 		}
 		f, err := os.Open(*releasesFile)
 		if err != nil {
