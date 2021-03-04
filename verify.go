@@ -132,16 +132,21 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 		ra     = bufio.NewReader(releases)
 		rb     = bufio.NewReader(refs)
 		ka, kb string
+		i      int
 	)
 	deriveKey := func(line string) string {
-		parts := strings.Fields(line)
+		parts := strings.Split(line, "\t")
 		if len(parts) == 3 {
 			return parts[1]
 		}
 		return ""
 	}
-
+	log.Print("starting zip verify")
 	for {
+		i++
+		if i%1000000 == 0 {
+			log.Printf("@%d", i)
+		}
 		switch {
 		case ka == "":
 			for ka != "" {
