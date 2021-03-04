@@ -161,6 +161,9 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 			log.Printf("forwarded [a] %d", i)
 		case kb == "":
 			for kb == "" {
+				if j%50000000 == 0 {
+					log.Printf("spooling [b] %d", j)
+				}
 				line, err = rb.ReadString('\n')
 				if err == io.EOF {
 					return nil
