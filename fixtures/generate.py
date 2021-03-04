@@ -10,12 +10,12 @@ with open("b.tsv", "w") as f:
 
 with open("u.tsv", "w") as f:
     for _ in range(10):
-        print("x\tk1\tx", file=f)
+        print("u\tk1\tx", file=f)
     for _ in range(10):
-        print("x\tk2\tx", file=f)
+        print("u\tk2\tx", file=f)
 
 with open("v.tsv", "w") as f:
     for _ in range(10):
-        print("x\tk1\tx", file=f)
+        print("v\tk1\tx", file=f)
     for _ in range(10):
-        print("x\tk2\tx", file=f)
+        print("v\tk2\tx", file=f)

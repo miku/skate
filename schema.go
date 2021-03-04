@@ -217,12 +217,13 @@ func (cr *ClusterResult) OneNonRef() (*Release, error) {
 	return nil, fmt.Errorf("no release found")
 }
 
-// GroupedBag holds two groups of zero or more docs.
-type GroupedBag struct {
+// GroupedCluster is a cluster with explicit groups (e.g. store the json lines
+// in A, B).
+type GroupedCluster struct {
 	A []string
 	B []string
 }
 
-func (b *GroupedBag) String() string {
-	return fmt.Sprintf("<Bag A/B %d/%d>", len(b.A), len(b.B))
+func (b *GroupedCluster) String() string {
+	return fmt.Sprintf("<GroupedCluster A/B %d/%d %v, %v>", len(b.A), len(b.B), b.A, b.B)
 }

@@ -129,11 +129,12 @@ func RefCluster(p []byte) ([]byte, error) {
 // to a verifier.
 func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 	var (
-		ra           = bufio.NewReader(releases)
-		rb           = bufio.NewReader(refs)
-		line, ka, kb string
-		i, j         int64
-		err          error
+		ra                   = bufio.NewReader(releases)
+		rb                   = bufio.NewReader(refs)
+		line, ka, kb, ca, cb string // line, key: ka, kb; current line: ca, bc
+		i, j                 int64
+		done                 bool
+		err                  error
 	)
 	deriveKey := func(line string) string {
 		parts := strings.Split(strings.TrimSpace(line), "\t")
@@ -145,6 +146,9 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 	}
 	log.Print("starting zip verify")
 	for {
+		if done {
+			break
+		}
 		switch {
 		case ka == "":
 			for ka == "" {
@@ -156,6 +160,7 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 					return err
 				}
 				ka = deriveKey(line)
+				ca = line
 				i++
 			}
 			log.Printf("forwarded [a] %d", i)
@@ -172,10 +177,12 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 					return err
 				}
 				kb = deriveKey(line)
+				cb = line
 				j++
 			}
 			log.Printf("forwarded [b] %d", i)
 		case ka < kb:
+			log.Printf("ka < kb, %s %s", ka, kb)
 			for ka < kb {
 				line, err = ra.ReadString('\n')
 				if err == io.EOF {
@@ -185,8 +192,10 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 					return err
 				}
 				ka = deriveKey(line)
+				ca = line
 			}
 		case ka > kb:
+			log.Printf("ka > kb, %s %s", ka, kb)
 			for ka > kb {
 				line, err = rb.ReadString('\n')
 				if err == io.EOF {
@@ -196,39 +205,50 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 					return err
 				}
 				kb = deriveKey(line)
+				cb = line
 			}
 		case ka == kb:
+			log.Printf("keys equal: %s %s", ka, kb)
 			// Collect both groups and hand off.
-			bag := &GroupedBag{}
+			bag := &GroupedCluster{
+				A: []string{ca},
+				B: []string{cb},
+			}
 			for {
 				line, err = ra.ReadString('\n')
 				if err == io.EOF {
-					return nil
+					done = true
+					break
 				}
 				if err != nil {
 					return err
 				}
+				ca = line
 				k := deriveKey(line)
 				if k == ka {
 					bag.A = append(bag.A, line)
 					ka = k
 				} else {
+					ka = k
 					break
 				}
 			}
 			for {
 				line, err = rb.ReadString('\n')
 				if err == io.EOF {
-					return nil
+					done = true
+					break
 				}
 				if err != nil {
 					return err
 				}
+				cb = line
 				k := deriveKey(line)
 				if k == kb {
 					bag.B = append(bag.B, line)
 					kb = k
 				} else {
+					kb = k
 					break
 				}
 			}
