@@ -129,28 +129,26 @@ func RefCluster(p []byte) ([]byte, error) {
 // to a verifier.
 func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 	var (
-		ra     = bufio.NewReader(releases)
-		rb     = bufio.NewReader(refs)
-		ka, kb string
-		i      int
+		ra           = bufio.NewReader(releases)
+		rb           = bufio.NewReader(refs)
+		line, ka, kb string
+		i, j         int64
+		err          error
 	)
 	deriveKey := func(line string) string {
-		parts := strings.Split(line, "\t")
+		parts := strings.Split(strings.TrimSpace(line), "\t")
 		if len(parts) == 3 {
 			return parts[1]
 		}
+		log.Printf("unexpected input: %s", line)
 		return ""
 	}
 	log.Print("starting zip verify")
 	for {
-		i++
-		if i%1000000 == 0 {
-			log.Printf("@%d", i)
-		}
 		switch {
 		case ka == "":
 			for ka == "" {
-				line, err := ra.ReadString('\n')
+				line, err = ra.ReadString('\n')
 				if err == io.EOF {
 					return nil
 				}
@@ -158,10 +156,12 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 					return err
 				}
 				ka = deriveKey(line)
+				i++
 			}
+			log.Printf("forwarded [a] %d", i)
 		case kb == "":
 			for kb == "" {
-				line, err := rb.ReadString('\n')
+				line, err = rb.ReadString('\n')
 				if err == io.EOF {
 					return nil
 				}
@@ -169,10 +169,12 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 					return err
 				}
 				kb = deriveKey(line)
+				j++
 			}
+			log.Printf("forwarded [b] %d", i)
 		case ka < kb:
 			for ka < kb {
-				line, err := ra.ReadString('\n')
+				line, err = ra.ReadString('\n')
 				if err == io.EOF {
 					return nil
 				}
@@ -183,7 +185,7 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 			}
 		case ka > kb:
 			for ka > kb {
-				line, err := rb.ReadString('\n')
+				line, err = rb.ReadString('\n')
 				if err == io.EOF {
 					return nil
 				}
@@ -196,7 +198,7 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 			// Collect both groups and hand off.
 			bag := &GroupedBag{}
 			for {
-				line, err := ra.ReadString('\n')
+				line, err = ra.ReadString('\n')
 				if err == io.EOF {
 					return nil
 				}
@@ -212,7 +214,7 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 				}
 			}
 			for {
-				line, err := rb.ReadString('\n')
+				line, err = rb.ReadString('\n')
 				if err == io.EOF {
 					return nil
 				}
