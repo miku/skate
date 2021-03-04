@@ -149,18 +149,24 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 		}
 		switch {
 		case ka == "":
-			for ka != "" {
+			for ka == "" {
 				line, err := ra.ReadString('\n')
 				if err == io.EOF {
 					return nil
 				}
+				if err != nil {
+					return err
+				}
 				ka = deriveKey(line)
 			}
 		case kb == "":
-			for kb != "" {
+			for kb == "" {
 				line, err := rb.ReadString('\n')
 				if err == io.EOF {
 					return nil
+				}
+				if err != nil {
+					return err
 				}
 				kb = deriveKey(line)
 			}
@@ -170,6 +176,9 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 				if err == io.EOF {
 					return nil
 				}
+				if err != nil {
+					return err
+				}
 				ka = deriveKey(line)
 			}
 		case ka > kb:
@@ -177,6 +186,9 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 				line, err := rb.ReadString('\n')
 				if err == io.EOF {
 					return nil
+				}
+				if err != nil {
+					return err
 				}
 				kb = deriveKey(line)
 			}
@@ -187,6 +199,9 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 				line, err := ra.ReadString('\n')
 				if err == io.EOF {
 					return nil
+				}
+				if err != nil {
+					return err
 				}
 				k := deriveKey(line)
 				if k == ka {
@@ -200,6 +215,9 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 				line, err := rb.ReadString('\n')
 				if err == io.EOF {
 					return nil
+				}
+				if err != nil {
+					return err
 				}
 				k := deriveKey(line)
 				if k == kb {
