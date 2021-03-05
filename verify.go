@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/miku/skate/set"
@@ -132,6 +133,7 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 		ra                   = bufio.NewReader(releases)
 		rb                   = bufio.NewReader(refs)
 		line, ka, kb, ca, cb string // line, key: ka, kb; current line: ca, cb
+		i                    int
 		done                 bool
 		err                  error
 	)
@@ -143,7 +145,12 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 		log.Printf("unexpected input: %s", line)
 		return ""
 	}
+	started := time.Now()
 	for {
+		i++
+		if i%1000000 == 0 {
+			log.Printf("@%d (%02.f lines/s)", i, float64(i)/time.Since(started).Seconds())
+		}
 		if done {
 			break
 		}
@@ -239,7 +246,7 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 					break
 				}
 			}
-			log.Printf("cluster: %s", bag)
+			// log.Printf("cluster: %s", bag)
 		}
 	}
 	return nil
