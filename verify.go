@@ -133,7 +133,7 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 		ra                   = bufio.NewReader(releases)
 		rb                   = bufio.NewReader(refs)
 		line, ka, kb, ca, cb string // line, key: ka, kb; current line: ca, cb
-		i                    int
+		i, j                 int
 		done                 bool
 		err                  error
 	)
@@ -149,7 +149,8 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 	for {
 		i++
 		if i%1000000 == 0 {
-			log.Printf("@%d (%02.f lines/s)", i, float64(i)/time.Since(started).Seconds())
+			log.Printf("@%d clusters=%d %02.f lines/s, %02.f clusters/s", i, j,
+				float64(i)/time.Since(started).Seconds(), float64(j)/time.Since(started).Seconds())
 		}
 		if done {
 			break
@@ -246,6 +247,7 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 					break
 				}
 			}
+			j++
 			// log.Printf("cluster: %s", bag)
 		}
 	}
