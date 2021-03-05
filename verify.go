@@ -131,12 +131,11 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 	var (
 		ra                   = bufio.NewReader(releases)
 		rb                   = bufio.NewReader(refs)
-		line, ka, kb, ca, cb string // line, key: ka, kb; current line: ca, bc
-		i, j                 int64
+		line, ka, kb, ca, cb string // line, key: ka, kb; current line: ca, cb
 		done                 bool
 		err                  error
 	)
-	deriveKey := func(line string) string {
+	getKey := func(line string) string {
 		parts := strings.Split(strings.TrimSpace(line), "\t")
 		if len(parts) == 3 {
 			return parts[1]
@@ -144,7 +143,6 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 		log.Printf("unexpected input: %s", line)
 		return ""
 	}
-	log.Print("starting zip verify")
 	for {
 		if done {
 			break
@@ -159,16 +157,11 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 				if err != nil {
 					return err
 				}
-				ka = deriveKey(line)
+				ka = getKey(line)
 				ca = line
-				i++
 			}
-			log.Printf("forwarded [a] %d", i)
 		case kb == "":
 			for kb == "" {
-				if j%50000000 == 0 {
-					log.Printf("spooling [b] %d", j)
-				}
 				line, err = rb.ReadString('\n')
 				if err == io.EOF {
 					return nil
@@ -176,13 +169,10 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 				if err != nil {
 					return err
 				}
-				kb = deriveKey(line)
+				kb = getKey(line)
 				cb = line
-				j++
 			}
-			log.Printf("forwarded [b] %d", i)
 		case ka < kb:
-			// log.Printf("ka < kb, %s %s", ka, kb)
 			for ka < kb {
 				line, err = ra.ReadString('\n')
 				if err == io.EOF {
@@ -191,11 +181,10 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 				if err != nil {
 					return err
 				}
-				ka = deriveKey(line)
+				ka = getKey(line)
 				ca = line
 			}
 		case ka > kb:
-			// log.Printf("ka > kb, %s %s", ka, kb)
 			for ka > kb {
 				line, err = rb.ReadString('\n')
 				if err == io.EOF {
@@ -204,12 +193,10 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 				if err != nil {
 					return err
 				}
-				kb = deriveKey(line)
+				kb = getKey(line)
 				cb = line
 			}
 		case ka == kb:
-			// log.Printf("keys equal: %s %s", ka, kb)
-			// Collect both groups and hand off.
 			bag := &GroupedCluster{
 				A: []string{ca},
 				B: []string{cb},
@@ -224,7 +211,7 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 					return err
 				}
 				ca = line
-				k := deriveKey(line)
+				k := getKey(line)
 				if k == ka {
 					bag.A = append(bag.A, line)
 					ka = k
@@ -243,7 +230,7 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 					return err
 				}
 				cb = line
-				k := deriveKey(line)
+				k := getKey(line)
 				if k == kb {
 					bag.B = append(bag.B, line)
 					kb = k
