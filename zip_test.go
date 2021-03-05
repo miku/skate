@@ -26,6 +26,11 @@ func TestZipper(t *testing.T) {
 			"testdata/zip/c1b",
 			"testdata/zip/c1c",
 		},
+		{
+			"testdata/zip/c2a",
+			"testdata/zip/c2b",
+			"testdata/zip/c2c",
+		},
 	}
 	keyFunc := func(s string) (string, error) {
 		parts := strings.Fields(s)
