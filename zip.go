@@ -8,13 +8,13 @@ import (
 // Zipper allows to take two streams, extract a key from them and group items
 // from both streams into a single bag for further processing.
 func Zipper(r, s io.Reader, keyFunc func(string) (string, error),
-	groupFunc func(*GroupedCluster) error, w io.Writer) error {
+	groupFunc func(*GroupedCluster) error) error {
 	var (
-		ra                   = bufio.NewReader(r)
-		rb                   = bufio.NewReader(s)
-		line, ka, kb, ca, cb string // line, key: ka, kb; current line: ca, cb
-		done                 bool
-		err                  error
+		ra             = bufio.NewReader(r)
+		rb             = bufio.NewReader(s)
+		ka, kb, ca, cb string // key: ka, kb; current line: ca, cb
+		done           bool
+		err            error
 	)
 	for {
 		if done {
@@ -23,63 +23,55 @@ func Zipper(r, s io.Reader, keyFunc func(string) (string, error),
 		switch {
 		case ka == "":
 			for ka == "" {
-				line, err = ra.ReadString('\n')
+				ca, err = ra.ReadString('\n')
 				if err == io.EOF {
 					return nil
 				}
 				if err != nil {
 					return err
 				}
-				ka, err = keyFunc(line)
-				if err != nil {
+				if ka, err = keyFunc(ca); err != nil {
 					return err
 				}
-				ca = line
 			}
 		case kb == "":
 			for kb == "" {
-				line, err = rb.ReadString('\n')
+				cb, err = rb.ReadString('\n')
 				if err == io.EOF {
 					return nil
 				}
 				if err != nil {
 					return err
 				}
-				kb, err = keyFunc(line)
-				if err != nil {
+				if kb, err = keyFunc(cb); err != nil {
 					return err
 				}
-				cb = line
 			}
 		case ka < kb:
 			for ka < kb {
-				line, err = ra.ReadString('\n')
+				ca, err = ra.ReadString('\n')
 				if err == io.EOF {
 					return nil
 				}
 				if err != nil {
 					return err
 				}
-				ka, err = keyFunc(line)
-				if err != nil {
+				if ka, err = keyFunc(ca); err != nil {
 					return err
 				}
-				ca = line
 			}
 		case ka > kb:
 			for ka > kb {
-				line, err = rb.ReadString('\n')
+				cb, err = rb.ReadString('\n')
 				if err == io.EOF {
 					return nil
 				}
 				if err != nil {
 					return err
 				}
-				kb, err = keyFunc(line)
-				if err != nil {
+				if kb, err = keyFunc(cb); err != nil {
 					return err
 				}
-				cb = line
 			}
 		case ka == kb:
 			bag := &GroupedCluster{
@@ -87,7 +79,7 @@ func Zipper(r, s io.Reader, keyFunc func(string) (string, error),
 				B: []string{cb},
 			}
 			for {
-				line, err = ra.ReadString('\n')
+				ca, err = ra.ReadString('\n')
 				if err == io.EOF {
 					done = true
 					break
@@ -95,13 +87,12 @@ func Zipper(r, s io.Reader, keyFunc func(string) (string, error),
 				if err != nil {
 					return err
 				}
-				ca = line
-				k, err := keyFunc(line)
+				k, err := keyFunc(ca)
 				if err != nil {
 					return err
 				}
 				if k == ka {
-					bag.A = append(bag.A, line)
+					bag.A = append(bag.A, ca)
 					ka = k
 				} else {
 					ka = k
@@ -109,7 +100,7 @@ func Zipper(r, s io.Reader, keyFunc func(string) (string, error),
 				}
 			}
 			for {
-				line, err = rb.ReadString('\n')
+				cb, err = rb.ReadString('\n')
 				if err == io.EOF {
 					done = true
 					break
@@ -117,13 +108,12 @@ func Zipper(r, s io.Reader, keyFunc func(string) (string, error),
 				if err != nil {
 					return err
 				}
-				cb = line
-				k, err := keyFunc(line)
+				k, err := keyFunc(cb)
 				if err != nil {
 					return err
 				}
 				if k == kb {
-					bag.B = append(bag.B, line)
+					bag.B = append(bag.B, cb)
 					kb = k
 				} else {
 					kb = k

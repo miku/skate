@@ -128,7 +128,7 @@ func RefCluster(p []byte) ([]byte, error) {
 // on matching groups. Sketch: Advance release by one line, iterate refs and
 // collect matching line from refs - that's the cluster. Hand over the cluster
 // to a verifier.
-func ZipVerify(releases, refs io.Reader, w io.Writer) error {
+func ZipVerify(releases, refs io.Reader) error {
 	var (
 		ra                   = bufio.NewReader(releases)
 		rb                   = bufio.NewReader(refs)

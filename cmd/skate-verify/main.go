@@ -56,7 +56,7 @@ func main() {
 			log.Fatal(err)
 		}
 		defer g.Close()
-		if err := skate.ZipVerify(f, g, os.Stdout); err != nil {
+		if err := skate.ZipVerify(f, g); err != nil {
 			log.Fatal(err)
 		}
 	case "ref":

@@ -50,7 +50,7 @@ func TestZipper(t *testing.T) {
 				sliceMap(g.B, strings.TrimSpace))
 			return nil
 		}
-		err := Zipper(ar, br, keyFunc, groupFunc, ioutil.Discard)
+		err := Zipper(ar, br, keyFunc, groupFunc)
 		if err != nil {
 			t.Errorf("failed: %v", err)
 		}
