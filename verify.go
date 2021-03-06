@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -133,7 +134,12 @@ func ZipVerify(releases, refs io.Reader) error {
 		}
 		return "", fmt.Errorf("unexpected input: %s", line)
 	}
+	var i int
 	return Zipper(releases, refs, getKey, func(_ *GroupedCluster) error {
+		i++
+		if i%1000000 == 0 {
+			log.Printf("found %d clusters", i)
+		}
 		return nil
 	})
 }
