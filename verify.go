@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/miku/skate/set"
@@ -134,11 +135,14 @@ func ZipVerify(releases, refs io.Reader) error {
 		}
 		return "", fmt.Errorf("unexpected input: %s", line)
 	}
-	var i int
+	var (
+		i       int
+		started = time.Now()
+	)
 	return Zipper(releases, refs, getKey, func(_ *GroupedCluster) error {
 		i++
-		if i%1000000 == 0 {
-			log.Printf("found %d clusters", i)
+		if i%100000 == 0 {
+			log.Printf("found %d clusters at %02.f", i, float64(i)/time.Since(started).Seconds())
 		}
 		return nil
 	})
