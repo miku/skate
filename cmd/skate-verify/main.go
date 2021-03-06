@@ -6,6 +6,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"log"
 	"os"
@@ -56,7 +57,9 @@ func main() {
 			log.Fatal(err)
 		}
 		defer g.Close()
-		if err := skate.ZipVerify(f, g); err != nil {
+		bw := bufio.NewWriter(os.Stdout)
+		defer bw.Flush()
+		if err := skate.ZipVerify(f, g, bw); err != nil {
 			log.Fatal(err)
 		}
 	case "ref":

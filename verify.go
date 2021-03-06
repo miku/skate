@@ -127,7 +127,7 @@ func RefCluster(p []byte) ([]byte, error) {
 // on matching groups. Sketch: Advance release by one line, iterate refs and
 // collect matching line from refs - that's the cluster. Hand over the cluster
 // to a verifier.
-func ZipVerify(releases, refs io.Reader) error {
+func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 	getKey := func(line string) (string, error) {
 		parts := strings.Split(strings.TrimSpace(line), "\t")
 		if len(parts) == 3 {
@@ -135,14 +135,45 @@ func ZipVerify(releases, refs io.Reader) error {
 		}
 		return "", fmt.Errorf("unexpected input: %s", line)
 	}
+	lineToRelease := func(line string) (*Release, error) {
+		parts := strings.Split(strings.TrimSpace(line), "\t")
+		if len(parts) == 3 {
+			var re *Release
+			if err := json.Unmarshal([]byte(parts[2]), &re); err != nil {
+				return nil, err
+			}
+			return re, nil
+		}
+		return nil, fmt.Errorf("unexpected input: %s", line)
+	}
 	var (
 		i       int
 		started = time.Now()
 	)
-	return Zipper(releases, refs, getKey, func(_ *GroupedCluster) error {
+	return Zipper(releases, refs, getKey, func(g *GroupedCluster) error {
 		i++
-		if i%100000 == 0 {
-			log.Printf("found %d clusters at %02.f", i, float64(i)/time.Since(started).Seconds())
+		if i%1000000 == 0 {
+			log.Printf("found %d clusters at %02.f clusters/s",
+				i, float64(i)/time.Since(started).Seconds())
+		}
+		if len(g.A) == 0 || len(g.B) == 0 {
+			return nil
+		}
+		pivot, err := lineToRelease(g.A[0])
+		if err != nil {
+			return err
+		}
+		// XXX: Find a better representant in A, compare against all B.
+		for _, line := range g.B {
+			re, err := lineToRelease(line)
+			if err != nil {
+				return err
+			}
+			result := Verify(pivot, re, 5)
+			if _, err := fmt.Fprintf(w, "%s %s %s %s\n",
+				pivot.Ident, re.Ident, result.Status, result.Reason); err != nil {
+				return err
+			}
 		}
 		return nil
 	})
