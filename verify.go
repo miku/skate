@@ -1,15 +1,12 @@
 package skate
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 	"unicode/utf8"
 
 	"github.com/miku/skate/set"
@@ -129,129 +126,16 @@ func RefCluster(p []byte) ([]byte, error) {
 // collect matching line from refs - that's the cluster. Hand over the cluster
 // to a verifier.
 func ZipVerify(releases, refs io.Reader) error {
-	var (
-		ra                   = bufio.NewReader(releases)
-		rb                   = bufio.NewReader(refs)
-		line, ka, kb, ca, cb string // line, key: ka, kb; current line: ca, cb
-		i, j                 int
-		done                 bool
-		err                  error
-	)
-	getKey := func(line string) string {
+	getKey := func(line string) (string, error) {
 		parts := strings.Split(strings.TrimSpace(line), "\t")
 		if len(parts) == 3 {
-			return parts[1]
+			return parts[1], nil
 		}
-		log.Printf("unexpected input: %s", line)
-		return ""
+		return "", fmt.Errorf("unexpected input: %s", line)
 	}
-	started := time.Now()
-	for {
-		i++
-		if i%1000000 == 0 {
-			log.Printf("@%d clusters=%d %02.f lines/s, %02.f clusters/s", i, j,
-				float64(i)/time.Since(started).Seconds(), float64(j)/time.Since(started).Seconds())
-		}
-		if done {
-			break
-		}
-		switch {
-		case ka == "":
-			for ka == "" {
-				line, err = ra.ReadString('\n')
-				if err == io.EOF {
-					return nil
-				}
-				if err != nil {
-					return err
-				}
-				ka = getKey(line)
-				ca = line
-			}
-		case kb == "":
-			for kb == "" {
-				line, err = rb.ReadString('\n')
-				if err == io.EOF {
-					return nil
-				}
-				if err != nil {
-					return err
-				}
-				kb = getKey(line)
-				cb = line
-			}
-		case ka < kb:
-			for ka < kb {
-				line, err = ra.ReadString('\n')
-				if err == io.EOF {
-					return nil
-				}
-				if err != nil {
-					return err
-				}
-				ka = getKey(line)
-				ca = line
-			}
-		case ka > kb:
-			for ka > kb {
-				line, err = rb.ReadString('\n')
-				if err == io.EOF {
-					return nil
-				}
-				if err != nil {
-					return err
-				}
-				kb = getKey(line)
-				cb = line
-			}
-		case ka == kb:
-			bag := &GroupedCluster{
-				A: []string{ca},
-				B: []string{cb},
-			}
-			for {
-				line, err = ra.ReadString('\n')
-				if err == io.EOF {
-					done = true
-					break
-				}
-				if err != nil {
-					return err
-				}
-				ca = line
-				k := getKey(line)
-				if k == ka {
-					bag.A = append(bag.A, line)
-					ka = k
-				} else {
-					ka = k
-					break
-				}
-			}
-			for {
-				line, err = rb.ReadString('\n')
-				if err == io.EOF {
-					done = true
-					break
-				}
-				if err != nil {
-					return err
-				}
-				cb = line
-				k := getKey(line)
-				if k == kb {
-					bag.B = append(bag.B, line)
-					kb = k
-				} else {
-					kb = k
-					break
-				}
-			}
-			j++
-			// log.Printf("cluster: %s", bag)
-		}
-	}
-	return nil
+	return Zipper(releases, refs, getKey, func(_ *GroupedCluster) error {
+		return nil
+	})
 }
 
 // Verify follows the fuzzycat (Python) implementation of this function. The Go

@@ -5,17 +5,6 @@ import (
 	"io"
 )
 
-func keyLine(r *bufio.Reader, f func(string) (string, error)) (line, key string, err error) {
-	if line, err = r.ReadString('\n'); err != nil {
-		return "", "", err
-	}
-	if key, err = f(line); err != nil {
-		return "", "", err
-	} else {
-		return line, key, nil
-	}
-}
-
 // Zipper allows to take two streams (with newline delimited elements), extract
 // a key from them and group items from both streams into a single struct for
 // further processing. The key extractor is currently the same for both
@@ -108,4 +97,16 @@ func Zipper(r, s io.Reader,
 		}
 	}
 	return nil
+}
+
+// keyLine, auxiliary function to return line, key and error in one call.
+func keyLine(r *bufio.Reader, f func(string) (string, error)) (line, key string, err error) {
+	if line, err = r.ReadString('\n'); err != nil {
+		return "", "", err
+	}
+	if key, err = f(line); err != nil {
+		return "", "", err
+	} else {
+		return line, key, nil
+	}
 }
