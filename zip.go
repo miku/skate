@@ -5,9 +5,23 @@ import (
 	"io"
 )
 
-// Zipper allows to take two streams, extract a key from them and group items
-// from both streams into a single bag for further processing.
-func Zipper(r, s io.Reader, keyFunc func(string) (string, error),
+func keyLine(r *bufio.Reader, f func(string) (string, error)) (line, key string, err error) {
+	if line, err = r.ReadString('\n'); err != nil {
+		return "", "", err
+	}
+	if key, err = f(line); err != nil {
+		return "", "", err
+	} else {
+		return line, key, nil
+	}
+}
+
+// Zipper allows to take two streams (with newline delimited elements), extract
+// a key from them and group items from both streams into a single struct for
+// further processing. The key extractor is currently the same for both
+// streams.
+func Zipper(r, s io.Reader,
+	keyFunc func(string) (string, error),
 	groupFunc func(*GroupedCluster) error) error {
 	var (
 		ra             = bufio.NewReader(r)
@@ -21,55 +35,23 @@ func Zipper(r, s io.Reader, keyFunc func(string) (string, error),
 			break
 		}
 		switch {
-		case ka == "":
-			for ka == "" {
-				ca, err = ra.ReadString('\n')
+		case ka == "" || ka < kb:
+			for ka == "" || ka < kb {
+				ca, ka, err = keyLine(ra, keyFunc)
 				if err == io.EOF {
 					return nil
 				}
 				if err != nil {
-					return err
-				}
-				if ka, err = keyFunc(ca); err != nil {
 					return err
 				}
 			}
-		case kb == "":
-			for kb == "" {
-				cb, err = rb.ReadString('\n')
+		case kb == "" || ka > kb:
+			for kb == "" || ka > kb {
+				cb, kb, err = keyLine(rb, keyFunc)
 				if err == io.EOF {
 					return nil
 				}
 				if err != nil {
-					return err
-				}
-				if kb, err = keyFunc(cb); err != nil {
-					return err
-				}
-			}
-		case ka < kb:
-			for ka < kb {
-				ca, err = ra.ReadString('\n')
-				if err == io.EOF {
-					return nil
-				}
-				if err != nil {
-					return err
-				}
-				if ka, err = keyFunc(ca); err != nil {
-					return err
-				}
-			}
-		case ka > kb:
-			for ka > kb {
-				cb, err = rb.ReadString('\n')
-				if err == io.EOF {
-					return nil
-				}
-				if err != nil {
-					return err
-				}
-				if kb, err = keyFunc(cb); err != nil {
 					return err
 				}
 			}
