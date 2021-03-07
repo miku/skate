@@ -44,7 +44,7 @@ func TestZipper(t *testing.T) {
 		br := mustReadFileReader(c.b)
 		cr := strings.TrimSpace(mustReadFileString(c.c))
 		var buf bytes.Buffer
-		groupFunc := func(g *GroupedCluster) error {
+		groupFunc := func(g *Group) error {
 			fmt.Fprintf(&buf, "A=%v, B=%v ",
 				sliceMap(g.A, strings.TrimSpace),
 				sliceMap(g.B, strings.TrimSpace))

@@ -150,7 +150,8 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 		i       int
 		started = time.Now()
 	)
-	return Zipper(releases, refs, getKey, func(g *GroupedCluster) error {
+	// XXX: parallelize
+	return Zipper(releases, refs, getKey, func(g *Group) error {
 		i++
 		if i%1000000 == 0 {
 			log.Printf("found %d clusters at %02.f clusters/s",
@@ -179,9 +180,9 @@ func ZipVerify(releases, refs io.Reader, w io.Writer) error {
 	})
 }
 
-// Verify follows the fuzzycat (Python) implementation of this function. The Go
-// version cab be used for large batch processing (where the Python version
-// might take two or more days).
+// Verify follows the fuzzycat (Python) implementation of this function: it
+// compares two release entities. The Go version can be used for large batch
+// processing (where the Python version might take two or more days).
 func Verify(a, b *Release, minTitleLength int) MatchResult {
 	if a.ExtIDs.DOI != "" && a.ExtIDs.DOI == b.ExtIDs.DOI {
 		return MatchResult{StatusExact, ReasonDOI}

@@ -5,13 +5,13 @@ import (
 	"io"
 )
 
-// Zipper allows to take two streams (with newline delimited elements), extract
+// Zipper allows to take two streams (with newline delimited records), extract
 // a key from them and group items from both streams into a single struct for
-// further processing. The key extractor is currently the same for both
+// further processing. The key extractor must currently be the same for both
 // streams.
 func Zipper(r, s io.Reader,
 	keyFunc func(string) (string, error),
-	groupFunc func(*GroupedCluster) error) error {
+	groupFunc func(*Group) error) error {
 	var (
 		ra             = bufio.NewReader(r)
 		rb             = bufio.NewReader(s)
@@ -45,7 +45,7 @@ func Zipper(r, s io.Reader,
 				}
 			}
 		case ka == kb:
-			bag := &GroupedCluster{
+			g := &Group{
 				A: []string{ca},
 				B: []string{cb},
 			}
@@ -63,7 +63,7 @@ func Zipper(r, s io.Reader,
 					return err
 				}
 				if k == ka {
-					bag.A = append(bag.A, ca)
+					g.A = append(g.A, ca)
 					ka = k
 				} else {
 					ka = k
@@ -84,14 +84,14 @@ func Zipper(r, s io.Reader,
 					return err
 				}
 				if k == kb {
-					bag.B = append(bag.B, cb)
+					g.B = append(g.B, cb)
 					kb = k
 				} else {
 					kb = k
 					break
 				}
 			}
-			if err := groupFunc(bag); err != nil {
+			if err := groupFunc(g); err != nil {
 				return err
 			}
 		}

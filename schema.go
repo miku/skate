@@ -217,13 +217,13 @@ func (cr *ClusterResult) OneNonRef() (*Release, error) {
 	return nil, fmt.Errorf("no release found")
 }
 
-// GroupedCluster is a cluster with explicit groups (e.g. store the json lines
-// in A, B).
-type GroupedCluster struct {
-	A []string
-	B []string
+// Group is a cluster with explicit groups (e.g. store the json lines in A, B).
+type Group struct {
+	Key string
+	A   []string
+	B   []string
 }
 
-func (b *GroupedCluster) String() string {
-	return fmt.Sprintf("<GroupedCluster A/B %d/%d>", len(b.A), len(b.B))
+func (g *Group) String() string {
+	return fmt.Sprintf("<GroupedCluster A/B %d/%d>", len(g.A), len(g.B))
 }
