@@ -3,12 +3,9 @@ package skate
 import (
 	"bytes"
 	"fmt"
-	"io"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 	"unicode/utf8"
 
 	"github.com/miku/skate/set"
@@ -121,63 +118,6 @@ func RefCluster(p []byte) ([]byte, error) {
 		}
 	}
 	return buf.Bytes(), nil
-}
-
-// ZipVerify takes two readers (tsv of id, key, doc) and will do verification
-// on matching groups. Sketch: Advance release by one line, iterate refs and
-// collect matching line from refs - that's the cluster. Hand over the cluster
-// to a verifier.
-func ZipVerify(releases, refs io.Reader, w io.Writer) error {
-	getKey := func(line string) (string, error) {
-		parts := strings.Split(strings.TrimSpace(line), "\t")
-		if len(parts) == 3 {
-			return parts[1], nil
-		}
-		return "", fmt.Errorf("unexpected input: %s", line)
-	}
-	lineToRelease := func(line string) (*Release, error) {
-		parts := strings.Split(strings.TrimSpace(line), "\t")
-		if len(parts) == 3 {
-			var re *Release
-			if err := json.Unmarshal([]byte(parts[2]), &re); err != nil {
-				return nil, err
-			}
-			return re, nil
-		}
-		return nil, fmt.Errorf("unexpected input: %s", line)
-	}
-	var (
-		i       int
-		started = time.Now()
-	)
-	// XXX: parallelize
-	return Zipper(releases, refs, getKey, func(g *Group) error {
-		i++
-		if i%1000000 == 0 {
-			log.Printf("found %d clusters at %02.f clusters/s",
-				i, float64(i)/time.Since(started).Seconds())
-		}
-		if len(g.A) == 0 || len(g.B) == 0 {
-			return nil
-		}
-		pivot, err := lineToRelease(g.A[0])
-		if err != nil {
-			return err
-		}
-		// XXX: Find a better representant in A, compare against all B.
-		for _, line := range g.B {
-			re, err := lineToRelease(line)
-			if err != nil {
-				return err
-			}
-			result := Verify(pivot, re, 5)
-			if _, err := fmt.Fprintf(w, "%s %s %s %s\n",
-				pivot.Ident, re.Ident, result.Status, result.Reason); err != nil {
-				return err
-			}
-		}
-		return nil
-	})
 }
 
 // Verify follows the fuzzycat (Python) implementation of this function: it

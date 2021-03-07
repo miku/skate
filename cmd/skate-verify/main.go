@@ -59,7 +59,7 @@ func main() {
 		defer g.Close()
 		bw := bufio.NewWriter(os.Stdout)
 		defer bw.Flush()
-		if err := skate.ZipVerify(f, g, bw); err != nil {
+		if err := skate.ZipVerifyRefs(f, g, bw); err != nil {
 			log.Fatal(err)
 		}
 	case "ref":
