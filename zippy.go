@@ -12,6 +12,7 @@ func ZipVerifyRefs(releases, refs io.Reader, w io.Writer) error {
 	// Define a grouper, working on one set of refs and releases with the same
 	// key at a time. Here, we do verification and write out the generated
 	// biblioref.
+	enc := json.NewEncoder(w)
 	grouper := func(g *Group) error {
 		if len(g.A) == 0 || len(g.B) == 0 {
 			return nil
@@ -31,9 +32,13 @@ func ZipVerifyRefs(releases, refs io.Reader, w io.Writer) error {
 				pivot.Ident, re.Ident, result.Status, result.Reason); err != nil {
 				return err
 			}
-			// XXX: we need to assemble the final document here (as we can
-			// access both release docs here)
-			_ = generateBiblioRef(re, pivot, result.Status, result.Reason)
+			br := generateBiblioRef(re, pivot, result.Status, result.Reason)
+			if err := enc.Encode(br); err != nil {
+				return err
+			}
+			if _, err := io.WriteString(w, "\n"); err != nil {
+				return err
+			}
 		}
 		return nil
 	}

@@ -79,7 +79,7 @@ func main() {
 			log.Fatal(err)
 		}
 	default:
-		log.Fatal("not implemented")
+		log.Fatal("not implemented, only: zip, ref, bref")
 	}
 	if *memProfile != "" {
 		f, err := os.Create(*memProfile)
