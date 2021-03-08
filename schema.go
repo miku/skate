@@ -132,6 +132,9 @@ type Release struct {
 				Key     string `json:"key,omitempty"`
 				Locator string `json:"locator,omitempty"`
 			} `json:"ref,omitempty"`
+			ResearchGate struct {
+				URL string `json:"url,omitempty"`
+			} `json:"rg,omitempty"`
 		} `json:"skate,omitempty"`
 	} `json:"extra,omitempty"`
 }
@@ -186,6 +189,13 @@ func (r *DataCiteRelation) RelatedIdentifier() string {
 	default:
 		return fmt.Sprintf("%v", v)
 	}
+}
+
+// Sitemap basic JSON style, e.g. for https://archive.org/details/rg_sitemap_2021_02_23.
+type Sitemap struct {
+	Lastmod string `json:"lastmod,omitempty"`
+	Title   string `json:"title,omitempty"`
+	URL     string `json:"url,omitempty"`
 }
 
 // BiblioRef as a prototype for indexing.
