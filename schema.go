@@ -126,7 +126,7 @@ type Release struct {
 			Status string `json:"status,omitempty"`
 			// Carry the ref index and key around.
 			Ref struct {
-				Index   int64  `json:"index,omitempty"`
+				Index   int64  `json:"index"` // do not omit 0
 				Key     string `json:"key,omitempty"`
 				Locator string `json:"locator,omitempty"`
 			} `json:"ref,omitempty"`
