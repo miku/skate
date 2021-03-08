@@ -29,7 +29,9 @@ func RefToRelease(ref *Ref) (*Release, error) {
 	release.Volume = b.Volume
 	release.Issue = b.Issue
 	release.Pages = b.Pages
-	release.ReleaseYearValue = fmt.Sprintf("%d", ref.ReleaseYear)
+	if ref.ReleaseYear > 1000 {
+		release.ReleaseYearValue = fmt.Sprintf("%d", ref.ReleaseYear)
+	}
 	for i, name := range b.ContribRawNames {
 		contribs[i].Index = i
 		contribs[i].RawName = name
@@ -101,7 +103,7 @@ type Release struct {
 		Key     string `json:"key,omitempty"`
 		Locator string `json:"locator,omitempty"`
 		Year    int64  `json:"year,omitempty"`
-	} `json:"refs"`
+	} `json:"refs,omitempty"`
 	ReleaseDate      string      `json:"release_date,omitempty"`
 	ReleaseYearValue interface{} `json:"release_year,omitempty"` // might be int or str
 	ReleaseStage     string      `json:"release_stage,omitempty"`
@@ -126,7 +128,7 @@ type Release struct {
 			Status string `json:"status,omitempty"`
 			// Carry the ref index and key around.
 			Ref struct {
-				Index   int64  `json:"index"` // do not omit 0
+				Index   int64  `json:"index,omitempty"`
 				Key     string `json:"key,omitempty"`
 				Locator string `json:"locator,omitempty"`
 			} `json:"ref,omitempty"`
