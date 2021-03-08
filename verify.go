@@ -147,7 +147,7 @@ func RefClusterToBiblioRef(p []byte) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-			b = append(b, 0x10)
+			b = append(b, []byte("\n")...)
 			return b, nil
 		default:
 			continue
