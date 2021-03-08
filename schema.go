@@ -122,8 +122,14 @@ type Release struct {
 			Relations       []DataCiteRelation `json:"relations,omitempty"`
 		} `json:"datacite,omitempty"`
 		Skate struct {
-			// Mark as converted.
+			// Mark as converted (e.g. by setting status to "ref")
 			Status string `json:"status,omitempty"`
+			// Carry the ref index and key around.
+			Ref struct {
+				Index   int64  `json:"index,omitempty"`
+				Key     string `json:"key,omitempty"`
+				Locator string `json:"locator,omitempty"`
+			} `json:"ref,omitempty"`
 		} `json:"skate,omitempty"`
 	} `json:"extra,omitempty"`
 }
@@ -142,6 +148,10 @@ func (r *Release) Subtitle() (result []string) {
 		return []string{v}
 	}
 	return []string{}
+}
+
+func (r *Release) ReleaseYearString() string {
+	return fmt.Sprintf("%d", r.ReleaseYear())
 }
 
 // ReleaseYear returns year as int, no further validity checks.
@@ -185,7 +195,7 @@ type BiblioRef struct {
 	SourceWikipediaArticle string `json:"source_wikipedia_article,omitempty"`
 	SourceReleaseStage     string `json:"source_release_stage,omitempty"`
 	SourceYear             string `json:"source_year,omitempty"`
-	RefIndex               int    `json:"ref_index,omitempty"`
+	RefIndex               int64  `json:"ref_index,omitempty"`
 	RefKey                 string `json:"ref_key,omitempty"`
 	RefLocator             string `json:"ref_locator,omitempty"`
 	TargetReleaseIdent     string `json:"target_release_ident,omitempty"`

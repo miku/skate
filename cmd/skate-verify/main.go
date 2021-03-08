@@ -21,7 +21,7 @@ import (
 var (
 	numWorkers   = flag.Int("w", runtime.NumCPU(), "number of workers")
 	batchSize    = flag.Int("b", 10000, "batch size")
-	mode         = flag.String("m", "ref", "mode: ref, zip")
+	mode         = flag.String("m", "ref", "mode: ref, bref, zip")
 	releasesFile = flag.String("R", "", "releases, tsv, sorted by key (zip mode only)")
 	refsFile     = flag.String("F", "", "refs, tsv, sorted by key (zip mode only)")
 	cpuProfile   = flag.String("cpuprofile", "", "write cpu profile to file")
@@ -65,6 +65,14 @@ func main() {
 	case "ref":
 		// https://git.io/JtACz
 		pp := parallel.NewProcessor(os.Stdin, os.Stdout, skate.RefCluster)
+		pp.NumWorkers = *numWorkers
+		pp.BatchSize = *batchSize
+		if err := pp.Run(); err != nil {
+			log.Fatal(err)
+		}
+	case "bref":
+		// generate biblioref
+		pp := parallel.NewProcessor(os.Stdin, os.Stdout, skate.RefClusterToBiblioRef)
 		pp.NumWorkers = *numWorkers
 		pp.BatchSize = *batchSize
 		if err := pp.Run(); err != nil {

@@ -33,16 +33,11 @@ func ZipVerifyRefs(releases, refs io.Reader, w io.Writer) error {
 			}
 			// XXX: we need to assemble the final document here (as we can
 			// access both release docs here)
-			_ = generateBiblioRef(re, pivot)
+			_ = generateBiblioRef(re, pivot, result.Status, result.Reason)
 		}
 		return nil
 	}
 	return Zipper(releases, refs, getKey, grouper)
-}
-
-// generateBiblioRef generates a bibliographic schema document.
-func generateBiblioRef(source, target *Release) *BiblioRef {
-	return nil
 }
 
 func getKey(line string) (string, error) {

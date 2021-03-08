@@ -116,8 +116,61 @@ func RefCluster(p []byte) ([]byte, error) {
 			pivot.Ident, re.Ident, result.Status, result.Reason); err != nil {
 			return nil, err
 		}
+		// XXX: We can generate a biblioref here, too.
 	}
 	return buf.Bytes(), nil
+}
+
+// RefClusterToBiblioRef creates a BiblioRef schema from exact and strong matches.
+func RefClusterToBiblioRef(p []byte) ([]byte, error) {
+	var (
+		cr  *ClusterResult
+		br  *BiblioRef
+		buf bytes.Buffer
+	)
+	if err := json.Unmarshal(p, &cr); err != nil {
+		return nil, err
+	}
+	pivot, err := cr.OneNonRef()
+	if err != nil {
+		return nil, err
+	}
+	for _, re := range cr.Values {
+		if re.Extra.Skate.Status != "ref" {
+			continue
+		}
+		result := Verify(pivot, re, 5)
+		switch result.Status {
+		case StatusExact, StatusStrong:
+			br = generateBiblioRef(re, pivot, result.Status, result.Reason)
+			b, err := json.Marshal(br)
+			if err != nil {
+				return nil, err
+			}
+			b = append(b, 0x10)
+			return b, nil
+		default:
+			continue
+		}
+	}
+	return buf.Bytes(), nil
+}
+
+// generateBiblioRef generates a bibliographic schema document.
+func generateBiblioRef(source, target *Release, matchStatus Status, matchReason Reason) *BiblioRef {
+	var bref BiblioRef
+	bref.SourceReleaseIdent = source.Ident
+	bref.SourceWorkIdent = source.WorkID
+	bref.SourceReleaseStage = source.ReleaseStage
+	bref.SourceYear = source.ReleaseYearString()
+	bref.RefIndex = source.Extra.Skate.Ref.Index
+	bref.RefKey = source.Extra.Skate.Ref.Key
+	bref.TargetReleaseIdent = target.Ident
+	bref.TargetWorkIdent = target.WorkID
+	bref.MatchProvenance = "fuzzy"
+	bref.MatchStatus = matchStatus.String()
+	bref.MatchReason = matchReason.String()
+	return &bref
 }
 
 // Verify follows the fuzzycat (Python) implementation of this function: it

@@ -34,6 +34,8 @@ func main() {
 			return nil, err
 		}
 		release.Extra.Skate.Status = "ref" // means: converted from ref
+		release.Extra.Skate.Ref.Index = ref.Index
+		release.Extra.Skate.Ref.Key = ref.Key
 		b, err := json.Marshal(release)
 		b = append(b, bytesNewline...)
 		return b, err
