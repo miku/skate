@@ -114,7 +114,7 @@ type Release struct {
 	Title            string      `json:"title,omitempty"`
 	WorkID           string      `json:"work_id,omitempty"`
 	Extra            struct {
-		ContainerName string      `json:"container_name"`
+		ContainerName string      `json:"container_name,omitempty"`
 		SubtitleValue interface{} `json:"subtitle,omitempty"` // []str or str
 		Crossref      struct {
 			Type string `json:"type,omitempty"`
