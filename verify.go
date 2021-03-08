@@ -75,6 +75,14 @@ const (
 	ReasonYear
 )
 
+func (s Status) Short() string {
+	return strings.ToLower(strings.Replace(s.String(), "Status", "", 1))
+}
+
+func (r Reason) Short() string {
+	return strings.ToLower(strings.Replace(r.String(), "Reason", "", 1))
+}
+
 // MatchResult is the result of a verification.
 type MatchResult struct {
 	Status Status
@@ -168,8 +176,8 @@ func generateBiblioRef(source, target *Release, matchStatus Status, matchReason 
 	bref.TargetReleaseIdent = target.Ident
 	bref.TargetWorkIdent = target.WorkID
 	bref.MatchProvenance = "fuzzy"
-	bref.MatchStatus = matchStatus.String()
-	bref.MatchReason = matchReason.String()
+	bref.MatchStatus = matchStatus.Short()
+	bref.MatchReason = matchReason.Short()
 	return &bref
 }
 
