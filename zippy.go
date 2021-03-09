@@ -61,7 +61,7 @@ func lineColumn(line, sep string, column int) string {
 
 func lineColumnToRelease(line, sep string, column int) (*Release, error) {
 	var re *Release
-	if err := json.Unmarshal([]byte(lineColumn(line, sep, 3)), &re); err != nil {
+	if err := json.Unmarshal([]byte(lineColumn(line, sep, column)), &re); err != nil {
 		return nil, err
 	}
 	return re, nil
