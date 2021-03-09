@@ -21,7 +21,7 @@ import (
 var (
 	numWorkers   = flag.Int("w", runtime.NumCPU(), "number of workers")
 	batchSize    = flag.Int("b", 10000, "batch size")
-	mode         = flag.String("m", "ref", "mode: ref, bref, zip")
+	mode         = flag.String("m", "ref", "mode: ref, bref, zip, bzip")
 	releasesFile = flag.String("R", "", "releases, tsv, sorted by key (zip mode only)")
 	refsFile     = flag.String("F", "", "refs, tsv, sorted by key (zip mode only)")
 	cpuProfile   = flag.String("cpuprofile", "", "write cpu profile to file")
@@ -43,7 +43,7 @@ func main() {
 	switch *mode {
 	case "zip":
 		// Take two "sorted key files" (one refs, one releases) and run
-		// verification across groups.
+		// verification across groups, generate biblioref file.
 		if *refsFile == "" || *releasesFile == "" {
 			log.Fatal("zip mode requires -R and -F to be set")
 		}
