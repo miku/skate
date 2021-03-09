@@ -29,7 +29,7 @@ func main() {
 	pp := parallel.NewProcessor(os.Stdin, os.Stdout, func(p []byte) ([]byte, error) {
 		parts := strings.Split(string(p), *delimiter)
 		if len(parts) < *index {
-			msg := fmt.Sprintf("warn: line has too few fields: %s", string(p))
+			msg := fmt.Sprintf("warn: line has too few fields (%d): %s", len(parts), string(p))
 			if *bestEffort {
 				log.Println(msg)
 				return nil, nil
