@@ -21,6 +21,7 @@
 /skate-biblioref
 /skate-verify
 /skate-fixup
+/skate-to-doi
 packaging/debian/skate/usr
 skate_*_amd64.deb
 

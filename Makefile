@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-TARGETS := skate-ref-to-release skate-derive-key skate-cluster skate-biblioref skate-cluster-stats skate-verify
+TARGETS := skate-ref-to-release skate-derive-key skate-cluster skate-biblioref skate-cluster-stats skate-verify skate-to-doi
 PKGNAME := skate
 
 .PHONY: test
