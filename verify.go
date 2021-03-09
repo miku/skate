@@ -154,6 +154,10 @@ func RefClusterToBiblioRef(p []byte) ([]byte, error) {
 		result := Verify(pivot, re, 5)
 		switch result.Status {
 		case StatusExact, StatusStrong:
+			if result.Reason == ReasonDOI {
+				// Assume we already have the DOI matches.
+				continue
+			}
 			br = generateBiblioRef(re, pivot, result.Status, result.Reason)
 			b, err := json.Marshal(br)
 			if err != nil {
