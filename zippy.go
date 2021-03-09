@@ -32,9 +32,6 @@ func ZipVerifyRefs(releases, refs io.Reader, w io.Writer) error {
 			if err := enc.Encode(br); err != nil {
 				return err
 			}
-			if _, err := io.WriteString(w, "\n"); err != nil {
-				return err
-			}
 		}
 		return nil
 	}
