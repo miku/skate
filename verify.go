@@ -1,3 +1,5 @@
+// TODO: The various grouping and verification functions should probably be in
+// a separate file and it should be obvious how to adjust or write a new one.
 package skate
 
 import (
@@ -75,10 +77,12 @@ const (
 	ReasonYear
 )
 
+// Short name.
 func (s Status) Short() string {
 	return strings.ToLower(strings.Replace(s.String(), "Status", "", 1))
 }
 
+// Short name.
 func (r Reason) Short() string {
 	return strings.ToLower(strings.Replace(r.String(), "Reason", "", 1))
 }
