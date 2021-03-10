@@ -32,7 +32,7 @@ func ZipUnverified(releases, refs io.Reader, mr MatchResult, provenance string, 
 			bref.SourceWorkIdent = ref.WorkIdent
 			bref.SourceReleaseStage = ref.ReleaseStage
 			bref.SourceYear = fmt.Sprintf("%d", ref.ReleaseYear)
-			bref.RefIndex = ref.Index
+			bref.RefIndex = ref.Index + 1 // we want 1-index (also helps with omitempty)
 			bref.RefKey = ref.Key
 			bref.TargetReleaseIdent = target.Ident
 			bref.TargetWorkIdent = target.WorkID
