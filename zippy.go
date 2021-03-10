@@ -28,9 +28,15 @@ func ZipVerifyRefs(releases, refs io.Reader, w io.Writer) error {
 				return err
 			}
 			result := Verify(pivot, re, 5)
-			br := generateBiblioRef(re, pivot, result.Status, result.Reason)
-			if err := enc.Encode(br); err != nil {
-				return err
+			switch result.Status {
+			case StatusExact, StatusStrong:
+				if result.Reason == ReasonDOI {
+					continue
+				}
+				br := generateBiblioRef(re, pivot, result.Status, result.Reason)
+				if err := enc.Encode(br); err != nil {
+					return err
+				}
 			}
 		}
 		return nil
