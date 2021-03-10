@@ -7,6 +7,36 @@ import (
 	"strings"
 )
 
+// ZipUnverified takes a release and refs reader (tsv, with ident, key, doc)
+// and assigns a fixed match result.
+func ZipUnverified(releases, refs io.Reader, mr MatchResult, w io.Writer) error {
+	// Define a grouper, working on one set of refs and releases with the same
+	// key at a time. Here, we do verification and write out the generated
+	// biblioref.
+	enc := json.NewEncoder(w)
+	grouper := func(g *Group) error {
+		if len(g.A) == 0 || len(g.B) == 0 {
+			return nil
+		}
+		pivot, err := lineColumnToRelease(g.A[0], "\t", 3)
+		if err != nil {
+			return err
+		}
+		for _, line := range g.B {
+			re, err := lineColumnToRelease(line, "\t", 3)
+			if err != nil {
+				return err
+			}
+			br := generateBiblioRef(re, pivot, mr.Status, mr.Reason)
+			if err := enc.Encode(br); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	return Zipper(releases, refs, getKey, grouper)
+}
+
 // ZipVerifyRefs takes a release and refs reader (tsv, with ident, key, doc)
 // and will execute gf for each group found.
 func ZipVerifyRefs(releases, refs io.Reader, w io.Writer) error {

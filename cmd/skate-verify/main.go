@@ -21,7 +21,7 @@ import (
 var (
 	numWorkers   = flag.Int("w", runtime.NumCPU(), "number of workers")
 	batchSize    = flag.Int("b", 10000, "batch size")
-	mode         = flag.String("m", "ref", "mode: ref, bref, zip, bzip")
+	mode         = flag.String("m", "ref", "mode: doi, ref, bref, zip, bzip")
 	releasesFile = flag.String("R", "", "releases, tsv, sorted by key (zip mode only)")
 	refsFile     = flag.String("F", "", "refs, tsv, sorted by key (zip mode only)")
 	cpuProfile   = flag.String("cpuprofile", "", "write cpu profile to file")
@@ -41,6 +41,27 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 	switch *mode {
+	case "doi":
+		// Fixed zip mode for DOI.
+		if *refsFile == "" || *releasesFile == "" {
+			log.Fatal("mode requires -R and -F to be set")
+		}
+		f, err := os.Open(*releasesFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+		g, err := os.Open(*refsFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer g.Close()
+		bw := bufio.NewWriter(os.Stdout)
+		defer bw.Flush()
+		mr := skate.MatchResult{skate.StatusExact, skate.ReasonDOI}
+		if err := skate.ZipUnverified(f, g, mr, bw); err != nil {
+			log.Fatal(err)
+		}
 	case "zip":
 		// Take two "sorted key files" (one refs, one releases) and run
 		// verification across groups, generate biblioref file.
