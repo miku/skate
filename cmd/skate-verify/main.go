@@ -12,6 +12,7 @@ import (
 	"os"
 	"runtime"
 	"runtime/pprof"
+	"strings"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/miku/skate"
@@ -21,13 +22,24 @@ import (
 var (
 	numWorkers   = flag.Int("w", runtime.NumCPU(), "number of workers")
 	batchSize    = flag.Int("b", 10000, "batch size")
-	mode         = flag.String("m", "ref", "mode: doi, ref, bref, zip, bzip")
+	mode         = flag.String("m", "ref", "mode: exact, ref, bref, zip, bzip")
+	exactReason  = flag.String("r", "", "doi, pmid, pmcid, arxiv")
+	provenance   = flag.String("p", "join", "provenance info")
 	releasesFile = flag.String("R", "", "releases, tsv, sorted by key (zip mode only)")
 	refsFile     = flag.String("F", "", "refs, tsv, sorted by key (zip mode only)")
 	cpuProfile   = flag.String("cpuprofile", "", "write cpu profile to file")
 	memProfile   = flag.String("memprofile", "", "write heap profile to file (go tool pprof -png --alloc_objects program mem.pprof > mem.png)")
 
 	json = jsoniter.ConfigCompatibleWithStandardLibrary
+
+	// XXX: This should be cleanup up soon.
+	matchResults = map[string]skate.MatchResult{
+		"doi":     skate.MatchResult{skate.StatusExact, skate.ReasonDOI},
+		"pmid":    skate.MatchResult{skate.StatusExact, skate.ReasonPMID},
+		"pmcid":   skate.MatchResult{skate.StatusExact, skate.ReasonPMCID},
+		"arxiv":   skate.MatchResult{skate.StatusExact, skate.ReasonArxiv},
+		"unknown": skate.MatchResult{skate.StatusUnknown, skate.ReasonUnknown},
+	}
 )
 
 func main() {
@@ -41,10 +53,17 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 	switch *mode {
-	case "doi":
+	case "exact":
 		// Fixed zip mode for DOI.
 		if *refsFile == "" || *releasesFile == "" {
 			log.Fatal("mode requires -R and -F to be set")
+		}
+		if *exactReason == "" {
+			var keys []string
+			for k := range matchResults {
+				keys = append(keys, k)
+			}
+			log.Fatalf("need a reason for the record, one of: %s", strings.Join(keys, ", "))
 		}
 		f, err := os.Open(*releasesFile)
 		if err != nil {
@@ -58,8 +77,11 @@ func main() {
 		defer g.Close()
 		bw := bufio.NewWriter(os.Stdout)
 		defer bw.Flush()
-		mr := skate.MatchResult{skate.StatusExact, skate.ReasonDOI}
-		if err := skate.ZipUnverified(f, g, mr, "join", bw); err != nil {
+		mr, ok := matchResults[*exactReason]
+		if !ok {
+			mr = matchResults["unknown"]
+		}
+		if err := skate.ZipUnverified(f, g, mr, *provenance, bw); err != nil {
 			log.Fatal(err)
 		}
 	case "zip":

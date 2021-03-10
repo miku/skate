@@ -32,6 +32,7 @@ const (
 
 	ReasonUnknown Reason = iota
 	ReasonAppendix
+	ReasonArxiv
 	ReasonArxivVersion
 	ReasonBlacklisted
 	ReasonBlacklistedFragment
@@ -49,17 +50,19 @@ const (
 	ReasonCustomPrefix105860ChoiceReview
 	ReasonCustomPrefix107916
 	ReasonCustomVHS
+	ReasonDOI
 	ReasonDataciteRelatedID
 	ReasonDataciteVersion
 	ReasonDatasetDOI
-	ReasonDOI
 	ReasonFigshareVersion
 	ReasonJaccardAuthors
 	ReasonJstorID
 	ReasonMaxClusterSizeExceeded
 	ReasonNumDiff
-	ReasonPageCount
+	ReasonPMCID
+	ReasonPMID
 	ReasonPMIDDOIPair
+	ReasonPageCount
 	ReasonPreprintPublished
 	ReasonPublisherBlacklist
 	ReasonReleaseType
