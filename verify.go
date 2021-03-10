@@ -158,7 +158,7 @@ func RefClusterToBiblioRef(p []byte) ([]byte, error) {
 				// Assume we already have the DOI matches.
 				continue
 			}
-			br = generateBiblioRef(re, pivot, result.Status, result.Reason)
+			br = generateBiblioRef(re, pivot, result.Status, result.Reason, "fuzzy")
 			b, err := json.Marshal(br)
 			if err != nil {
 				return nil, err
@@ -173,7 +173,7 @@ func RefClusterToBiblioRef(p []byte) ([]byte, error) {
 }
 
 // generateBiblioRef generates a bibliographic schema document.
-func generateBiblioRef(source, target *Release, matchStatus Status, matchReason Reason) *BiblioRef {
+func generateBiblioRef(source, target *Release, matchStatus Status, matchReason Reason, provenance string) *BiblioRef {
 	var bref BiblioRef
 	bref.SourceReleaseIdent = source.Ident
 	bref.SourceWorkIdent = source.WorkID
@@ -183,7 +183,7 @@ func generateBiblioRef(source, target *Release, matchStatus Status, matchReason 
 	bref.RefKey = source.Extra.Skate.Ref.Key
 	bref.TargetReleaseIdent = target.Ident
 	bref.TargetWorkIdent = target.WorkID
-	bref.MatchProvenance = "fuzzy"
+	bref.MatchProvenance = provenance
 	bref.MatchStatus = matchStatus.Short()
 	bref.MatchReason = matchReason.Short()
 	return &bref

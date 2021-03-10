@@ -9,7 +9,7 @@ import (
 
 // ZipUnverified takes a release and refs reader (tsv, with ident, key, doc)
 // and assigns a fixed match result.
-func ZipUnverified(releases, refs io.Reader, mr MatchResult, w io.Writer) error {
+func ZipUnverified(releases, refs io.Reader, mr MatchResult, provenance string, w io.Writer) error {
 	// Define a grouper, working on one set of refs and releases with the same
 	// key at a time. Here, we do verification and write out the generated
 	// biblioref.
@@ -27,7 +27,7 @@ func ZipUnverified(releases, refs io.Reader, mr MatchResult, w io.Writer) error 
 			if err != nil {
 				return err
 			}
-			br := generateBiblioRef(re, pivot, mr.Status, mr.Reason)
+			br := generateBiblioRef(re, pivot, mr.Status, mr.Reason, provenance)
 			if err := enc.Encode(br); err != nil {
 				return err
 			}

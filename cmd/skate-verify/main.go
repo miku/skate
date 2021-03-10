@@ -59,7 +59,7 @@ func main() {
 		bw := bufio.NewWriter(os.Stdout)
 		defer bw.Flush()
 		mr := skate.MatchResult{skate.StatusExact, skate.ReasonDOI}
-		if err := skate.ZipUnverified(f, g, mr, bw); err != nil {
+		if err := skate.ZipUnverified(f, g, mr, "join", bw); err != nil {
 			log.Fatal(err)
 		}
 	case "zip":
