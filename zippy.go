@@ -18,17 +18,28 @@ func ZipUnverified(releases, refs io.Reader, mr MatchResult, provenance string, 
 		if len(g.A) == 0 || len(g.B) == 0 {
 			return nil
 		}
-		pivot, err := lineColumnToRelease(g.A[0], "\t", 3)
+		target, err := lineColumnToRelease(g.A[0], "\t", 3)
 		if err != nil {
 			return err
 		}
 		for _, line := range g.B {
-			re, err := lineColumnToRelease(line, "\t", 3)
+			ref, err := lineColumnToRef(line, "\t", 3)
 			if err != nil {
 				return err
 			}
-			br := generateBiblioRef(re, pivot, mr.Status, mr.Reason, provenance)
-			if err := enc.Encode(br); err != nil {
+			var bref BiblioRef
+			bref.SourceReleaseIdent = ref.ReleaseIdent
+			bref.SourceWorkIdent = ref.WorkIdent
+			bref.SourceReleaseStage = ref.ReleaseStage
+			bref.SourceYear = fmt.Sprintf("%d", ref.ReleaseYear)
+			bref.RefIndex = ref.Index
+			bref.RefKey = ref.Key
+			bref.TargetReleaseIdent = target.Ident
+			bref.TargetWorkIdent = target.WorkID
+			bref.MatchProvenance = provenance
+			bref.MatchStatus = mr.Status.Short()
+			bref.MatchReason = mr.Reason.Short()
+			if err := enc.Encode(bref); err != nil {
 				return err
 			}
 		}
@@ -93,11 +104,19 @@ func lineColumn(line, sep string, column int) string {
 }
 
 func lineColumnToRelease(line, sep string, column int) (*Release, error) {
-	var re *Release
-	if err := json.Unmarshal([]byte(lineColumn(line, sep, column)), &re); err != nil {
+	var r *Release
+	if err := json.Unmarshal([]byte(lineColumn(line, sep, column)), &r); err != nil {
 		return nil, err
 	}
-	return re, nil
+	return r, nil
+}
+
+func lineColumnToRef(line, sep string, column int) (*Ref, error) {
+	var r *Ref
+	if err := json.Unmarshal([]byte(lineColumn(line, sep, column)), &r); err != nil {
+		return nil, err
+	}
+	return r, nil
 }
 
 // Zipper allows to take two streams (with newline delimited records), extract

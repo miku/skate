@@ -63,6 +63,7 @@ type Ref struct {
 	RefSource    string `json:"ref_source,omitempty"`
 	ReleaseYear  int    `json:"release_year,omitempty"`
 	ReleaseIdent string `json:"release_ident,omitempty"`
+	ReleaseStage string `json:"release_stage,omitempty"`
 	WorkIdent    string `json:"work_ident,omitempty"`
 }
 
