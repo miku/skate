@@ -181,7 +181,9 @@ func generateBiblioRef(source, target *Release, matchStatus Status, matchReason 
 	bref.SourceReleaseIdent = source.Ident
 	bref.SourceWorkIdent = source.WorkID
 	bref.SourceReleaseStage = source.ReleaseStage
-	bref.SourceYear = source.ReleaseYearString()
+	if source.ReleaseYear() > 1000 {
+		bref.SourceYear = source.ReleaseYearString()
+	}
 	bref.RefIndex = source.Extra.Skate.Ref.Index
 	bref.RefKey = source.Extra.Skate.Ref.Key
 	bref.TargetReleaseIdent = target.Ident
