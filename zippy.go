@@ -63,7 +63,7 @@ func ZipVerifyRefs(releases, refs io.Reader, w io.Writer) error {
 				if result.Reason == ReasonDOI {
 					continue
 				}
-				br := generateBiblioRef(re, pivot, result.Status, result.Reason)
+				br := generateBiblioRef(re, pivot, result.Status, result.Reason, "fuzzy")
 				if err := enc.Encode(br); err != nil {
 					return err
 				}
