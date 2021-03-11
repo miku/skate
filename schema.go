@@ -201,7 +201,7 @@ type Sitemap struct {
 
 // BiblioRef as a prototype for indexing.
 type BiblioRef struct {
-	Key                    string `json:"_key,omitempty"`      // XXX: clarify
+	Key                    string `json:"_id,omitempty"`
 	UpdateTs               int64  `json:"update_ts,omitempty"` // XXX: maybe: epoch_millis, https://www.elastic.co/guide/en/elasticsearch/reference/current/date.html
 	SourceReleaseIdent     string `json:"source_release_ident,omitempty"`
 	SourceWorkIdent        string `json:"source_work_ident,omitempty"`
