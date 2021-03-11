@@ -19,6 +19,7 @@ var (
 	maxClusterSize = flag.Int("max", 100000, "maximum cluster size")
 	requireBoth    = flag.Bool("both", false,
 		"require at least one ref and one non-ref item present in the cluster, implies -min 2")
+	dropEmptyKeys = flag.Bool("D", false, "drop empty keys")
 )
 
 func main() {
@@ -45,6 +46,9 @@ func main() {
 			log.Fatalf("line has only %d fields", len(fields))
 		}
 		key := strings.TrimSpace(fields[keyIndex])
+		if *dropEmptyKeys && key == "" {
+			continue
+		}
 		doc := strings.TrimSpace(fields[docIndex])
 		if prev != key {
 			if err := writeBatch(bw, key, batch); err != nil {
