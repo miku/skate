@@ -22,6 +22,7 @@
 /skate-verify
 /skate-fixup
 /skate-to-doi
+/skate-bref-id
 packaging/debian/skate/usr
 skate_*_amd64.deb
 

@@ -18,6 +18,8 @@ var (
 	numWorkers = flag.Int("w", runtime.NumCPU(), "number of workers")
 	batchSize  = flag.Int("b", 100000, "batch size")
 	json       = jsoniter.ConfigCompatibleWithStandardLibrary
+
+	newlineB = []byte("\n")
 )
 
 func main() {
@@ -28,7 +30,9 @@ func main() {
 		}
 		bref.Key = fmt.Sprintf("%s_%d", bref.SourceReleaseIdent, bref.RefIndex)
 		bref.UpdateTs = time.Now().Unix()
-		return json.Marshal(bref)
+		b, err := json.Marshal(bref)
+		b = append(b, newlineB...)
+		return b, err
 	})
 	pp.NumWorkers = *numWorkers
 	pp.BatchSize = *batchSize
