@@ -4,7 +4,7 @@ PKGNAME := skate
 
 .PHONY: test
 test:
-	go test -v ./...
+	go test -cover -v ./...
 
 .PHONY: generate
 generate:
