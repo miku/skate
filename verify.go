@@ -1,5 +1,6 @@
 // TODO: The various grouping and verification functions should probably be in
 // a separate file and it should be obvious how to adjust or write a new one.
+//go:generate stringer -type=Status,Reason -output verify_string.go verify.go
 package skate
 
 import (

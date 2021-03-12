@@ -6,8 +6,12 @@ PKGNAME := skate
 test:
 	go test -v ./...
 
+.PHONY: generate
+generate:
+	go generate
+
 .PHONY: all
-all: $(TARGETS)
+all: generate $(TARGETS)
 
 %: cmd/%/main.go
 	go build -o $@ $<
