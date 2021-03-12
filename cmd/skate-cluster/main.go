@@ -68,7 +68,7 @@ func containsBoth(batch []string) bool {
 	var isRef int
 	for _, doc := range batch {
 		// "ugly, but faster"
-		if strings.Contains(doc, `"extra":{"skate":{"status":"ref"}}}`) {
+		if strings.Contains(doc, `"extra":{"skate":{"status":"ref"`) {
 			isRef++
 		}
 	}
