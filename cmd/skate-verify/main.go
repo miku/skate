@@ -3,6 +3,8 @@
 // complete set).
 //
 // Currently: about 2h for 40M clusters (in "ref" mode).
+//
+// XXX: Cleanup inconsistent "modes".
 package main
 
 import (

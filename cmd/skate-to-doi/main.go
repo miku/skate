@@ -1,4 +1,10 @@
 // Filter to parse out a correctly looking DOI from a field.
+//
+// $ echo "1,xxx 10.123/12312 xxx,3" | skate-to-doi -d , -f 2
+// 1,10.123/12312,3
+//
+// We can use this to sanitize DOI-like fields in the reference dataset.
+
 package main
 
 import (
@@ -33,17 +39,15 @@ func main() {
 			if *bestEffort {
 				log.Println(msg)
 				return nil, nil
+			} else {
+				return nil, fmt.Errorf(msg)
 			}
-			return nil, fmt.Errorf(msg)
 		}
 		result := PatDOI.FindString(parts[*index-1])
-		if len(result) == 0 {
-			if *skipNonMatches {
-				return nil, nil
-			}
-		} else {
-			parts[*index-1] = result
+		if len(result) == 0 && *skipNonMatches {
+			return nil, nil
 		}
+		parts[*index-1] = result
 		return []byte(strings.Join(parts, *delimiter)), nil
 	})
 	pp.NumWorkers = *numWorkers

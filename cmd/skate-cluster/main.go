@@ -1,5 +1,16 @@
 // skate-cluster takes the output of skate-sorted-keys and generates a
 // "cluster" document, grouping docs by key. Can do some pre-filtering.
+//
+// For example, this:
+//
+//     id123    somekey123    {"a":"b", ...}
+//     id391    somekey123    {"x":"y", ...}
+//
+// would turn into (a single line containing all docs with the same key).
+//
+//     {"k": "somekey123", "v": [{"a":"b", ...},{"x":"y",...}]}
+//
+// A single line cluster is easier to parallelize (e.g. for verification, etc.).
 package main
 
 import (
@@ -25,12 +36,12 @@ var (
 func main() {
 	flag.Parse()
 	var (
-		br       = bufio.NewReader(os.Stdin)
-		bw       = bufio.NewWriter(os.Stdout)
-		prev     string
-		batch    []string
-		keyIndex = *keyField - 1
-		docIndex = *docField - 1
+		br             = bufio.NewReader(os.Stdin)
+		bw             = bufio.NewWriter(os.Stdout)
+		prev, key, doc string
+		batch, fields  []string
+		keyIndex       = *keyField - 1
+		docIndex       = *docField - 1
 	)
 	defer bw.Flush()
 	for {
@@ -41,25 +52,28 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fields := strings.Split(line, "\t")
+		fields = strings.Split(line, "\t")
 		if len(fields) <= keyIndex || len(fields) <= docIndex {
 			log.Fatalf("line has only %d fields", len(fields))
 		}
-		key := strings.TrimSpace(fields[keyIndex])
-		if *dropEmptyKeys && key == "" {
+		key = strings.TrimSpace(fields[keyIndex])
+		if *dropEmptyKeys && len(key) == 0 {
 			continue
 		}
-		doc := strings.TrimSpace(fields[docIndex])
+		doc = strings.TrimSpace(fields[docIndex])
 		if prev != key {
 			if err := writeBatch(bw, key, batch); err != nil {
 				log.Fatal(err)
 			}
 			batch = nil
 		}
-		prev, batch = key, append(batch, doc)
+		prev = key
+		batch = append(batch, doc)
 	}
-	if err := writeBatch(bw, prev, batch); err != nil {
-		log.Fatal(err)
+	if len(batch) > 0 {
+		if err := writeBatch(bw, prev, batch); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
@@ -67,7 +81,9 @@ func main() {
 func containsBoth(batch []string) bool {
 	var isRef int
 	for _, doc := range batch {
-		// XXX: fix this, "ugly, but faster"
+		// This is brittle. Most JSON should be in compact form, and there the
+		// following chars are by convention added to distinguish a release
+		// coming from a reference doc from other releases.
 		if strings.Contains(doc, `"status":"ref"`) {
 			isRef++
 		}
@@ -75,6 +91,7 @@ func containsBoth(batch []string) bool {
 	return isRef > 0 && isRef < len(batch)
 }
 
+// writeBatch writes out a single line containing the key and the cluster values.
 func writeBatch(w io.Writer, key string, batch []string) (err error) {
 	if len(batch) < *minClusterSize || len(batch) > *maxClusterSize {
 		return nil
@@ -82,7 +99,9 @@ func writeBatch(w io.Writer, key string, batch []string) (err error) {
 	if *requireBoth && !containsBoth(batch) {
 		return nil
 	}
-	// XXX: "ugly, but faster"
+	// This is brittle, but all items in a batch are valid JSON objects, hence,
+	// the following will be valid JSON as well, or will it? The key should not
+	// contain a quote.
 	_, err = fmt.Fprintf(w, "{\"k\": \"%s\", \"v\": [%s]}\n", key, strings.Join(batch, ","))
 	return
 }
