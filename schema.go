@@ -6,7 +6,7 @@ import (
 )
 
 // RefToRelease converts a ref to a release. Set a extra.skate.status flag to
-// be able to distinguish coverted entities later.
+// be able to distinguish converted entities later.
 func RefToRelease(ref *Ref) (*Release, error) {
 	var (
 		release  Release
@@ -40,7 +40,7 @@ func RefToRelease(ref *Ref) (*Release, error) {
 	return &release, nil
 }
 
-// Ref is a reference document.
+// Ref is a reference document, can be very partial.
 type Ref struct {
 	Biblio struct {
 		ArxivId         string   `json:"arxiv_id,omitempty"`
@@ -70,7 +70,7 @@ type Ref struct {
 // Release document. Note that we may have varying types for some fields.
 // Mitigation for now is to make the field an interface{}, name the field
 // "...Value" and to add a method with the field name, doing type assertion.
-// Example: ReleaseYearValue, ReleaseYear() int, etc.
+// Example: ReleaseYearValue interface{}, ReleaseYear() int, etc.
 type Release struct {
 	ContainerID   string `json:"container_id,omitempty"`
 	ContainerName string `json:"container_name,omitempty"`
@@ -156,6 +156,7 @@ func (r *Release) Subtitle() (result []string) {
 	return []string{}
 }
 
+// ReleaseYearString returns release year as string.
 func (r *Release) ReleaseYearString() string {
 	return fmt.Sprintf("%d", r.ReleaseYear())
 }
@@ -178,11 +179,13 @@ func (r *Release) ReleaseYear() int {
 	}
 }
 
+// DataCiteRelation as it appears in the release extra field.
 type DataCiteRelation struct {
 	RelatedIdentifierType  string      `json:"relatedIdentifierType,omitempty"`
 	RelatedIdentifierValue interface{} `json:"relatedIdentifier,omitempty"`
 }
 
+// RelatedIdentifier returns the identifier as string.
 func (r *DataCiteRelation) RelatedIdentifier() string {
 	switch v := r.RelatedIdentifierValue.(type) {
 	case string:
@@ -199,7 +202,7 @@ type Sitemap struct {
 	URL     string `json:"url,omitempty"`
 }
 
-// BiblioRef as a prototype for indexing.
+// BiblioRef as a prototype for indexing, https://is.gd/yicTom.
 type BiblioRef struct {
 	Key                    string `json:"_id,omitempty"`
 	UpdateTs               int64  `json:"update_ts,omitempty"` // XXX: maybe: epoch_millis, https://www.elastic.co/guide/en/elasticsearch/reference/current/date.html
@@ -229,7 +232,7 @@ type ClusterResult struct {
 	Values []*Release `json:"v"`
 }
 
-// NonRef returns the first non-reference release found in the cluster, or an
+// NonRef returns the first non-reference release found in a cluster, or an
 // error, if none has been found.
 func (cr *ClusterResult) OneNonRef() (*Release, error) {
 	for _, re := range cr.Values {
@@ -237,7 +240,7 @@ func (cr *ClusterResult) OneNonRef() (*Release, error) {
 			return re, nil
 		}
 	}
-	return nil, fmt.Errorf("no release found")
+	return nil, fmt.Errorf("no reference/release found")
 }
 
 // Group is a cluster with explicit groups (e.g. store the json lines in A, B).
@@ -248,5 +251,5 @@ type Group struct {
 }
 
 func (g *Group) String() string {
-	return fmt.Sprintf("<GroupedCluster A/B %d/%d>", len(g.A), len(g.B))
+	return fmt.Sprintf("<Group A/B %d/%d>", len(g.A), len(g.B))
 }

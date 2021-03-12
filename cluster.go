@@ -110,6 +110,7 @@ func KeyTitleSandcrawler(p []byte) (ident string, key string, err error) {
 	return ident, sandcrawlerSlugify(key), nil
 }
 
+// sandcrawlerSlugify normalizes a string.
 func sandcrawlerSlugify(s string) string {
 	slug := strings.ToLower(strings.TrimSpace(s))
 	for _, prefix := range SandcrawlerPrefixRemove {
