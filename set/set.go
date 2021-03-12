@@ -9,8 +9,9 @@ import (
 type Set map[string]struct{}
 
 // Add adds an element.
-func (s *Set) Add(v string) {
+func (s *Set) Add(v string) *Set {
 	(*s)[v] = struct{}{}
+	return s
 }
 
 // Len returns number of elements in set.
