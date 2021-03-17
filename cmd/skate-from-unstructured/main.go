@@ -58,18 +58,16 @@ func parseUnstructured(ref *skate.Ref) error {
 		v  string
 		vs []string
 	)
+	// Handle things like: 10.1111/j.1550-7408.1968.tb02138.x-BIB5|cit5,
+	// 10.1111/j.1558-5646.1997.tb02431.x-BIB0008|evo02431-cit-0008, ...
+	if strings.Contains(strings.ToLower(ref.Key), "-bib") && ref.Biblio.DOI == "" {
+		parts := strings.Split(strings.ToLower(ref.Key), "-bib")
+		ref.Biblio.DOI = parts[0]
+	}
 	// DOI
 	v = PatDOI.FindString(uns)
 	if v != "" && ref.Biblio.DOI == "" {
 		ref.Biblio.DOI = v
-	}
-	// Handle things like: 10.1111/j.1550-7408.1968.tb02138.x-BIB5|cit5,
-	// 10.1111/j.1558-5646.1997.tb02431.x-BIB0008|evo02431-cit-0008, ...
-	if strings.Contains(strings.ToLower(ref.Key), "-bib") && ref.Biblio.DOI == "" {
-		parts := strings.SplitN(strings.ToLower(ref.Key), "-bib", 1)
-		if len(parts[0]) > 0 {
-			ref.Biblio.DOI = parts[0]
-		}
 	}
 	// DOI in Key
 	v = PatDOINoHyphen.FindString(ref.Key)
