@@ -20,7 +20,9 @@ var (
 	json         = jsoniter.ConfigCompatibleWithStandardLibrary
 	bytesNewline = []byte("\n")
 
-	PatDOI = regexp.MustCompile(`10[.][0-9]{1,8}/[^ ]*[\w]`)
+	PatDOI      = regexp.MustCompile(`10[.][0-9]{1,8}/[^ ]*[\w]`)
+	PatArxivPDF = regexp.MustCompile(`http://arxiv.org/pdf/([0-9]{4,4}[.][0-9]{1,8})(v[0-9]{1,2})?(.pdf)?`)
+	PatArxivAbs = regexp.MustCompile(`http://arxiv.org/abs/([0-9]{4,4}[.][0-9]{1,8})(v[0-9]{1,2})?(.pdf)?`)
 )
 
 func main() {
@@ -50,9 +52,24 @@ func main() {
 // parseUnstructured will in-place augment missing DOI, arxiv id and so on.
 func parseUnstructured(ref *skate.Ref) error {
 	uns := ref.Biblio.Unstructured
-	doi := PatDOI.FindString(uns)
-	if doi != "" && ref.Biblio.DOI == "" {
-		ref.Biblio.DOI = doi
+	var (
+		v  string
+		vs []string
+	)
+	// DOI
+	v = PatDOI.FindString(uns)
+	if v != "" && ref.Biblio.DOI == "" {
+		ref.Biblio.DOI = v
+	}
+	// Arxiv
+	vs = PatArxivPDF.FindStringSubmatch(uns)
+	if len(vs) != 0 && ref.Biblio.ArxivId == "" {
+		ref.Biblio.ArxivId = vs[1]
+	} else {
+		vs = PatArxivAbs.FindStringSubmatch(uns)
+		if len(vs) != 0 && ref.Biblio.ArxivId == "" {
+			ref.Biblio.ArxivId = vs[1]
+		}
 	}
 	return nil
 }
