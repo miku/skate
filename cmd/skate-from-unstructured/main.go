@@ -20,9 +20,10 @@ var (
 	json         = jsoniter.ConfigCompatibleWithStandardLibrary
 	bytesNewline = []byte("\n")
 
-	PatDOI      = regexp.MustCompile(`10[.][0-9]{1,8}/[^ ]*[\w]`)
-	PatArxivPDF = regexp.MustCompile(`http://arxiv.org/pdf/([0-9]{4,4}[.][0-9]{1,8})(v[0-9]{1,2})?(.pdf)?`)
-	PatArxivAbs = regexp.MustCompile(`http://arxiv.org/abs/([0-9]{4,4}[.][0-9]{1,8})(v[0-9]{1,2})?(.pdf)?`)
+	PatDOI         = regexp.MustCompile(`10[.][0-9]{1,8}/[^ ]*[\w]`)
+	PatDOINoHyphen = regexp.MustCompile(`10[.][0-9]{1,8}/[^ -]*[\w]`)
+	PatArxivPDF    = regexp.MustCompile(`http://arxiv.org/pdf/([0-9]{4,4}[.][0-9]{1,8})(v[0-9]{1,2})?(.pdf)?`)
+	PatArxivAbs    = regexp.MustCompile(`http://arxiv.org/abs/([0-9]{4,4}[.][0-9]{1,8})(v[0-9]{1,2})?(.pdf)?`)
 )
 
 func main() {
@@ -58,6 +59,11 @@ func parseUnstructured(ref *skate.Ref) error {
 	)
 	// DOI
 	v = PatDOI.FindString(uns)
+	if v != "" && ref.Biblio.DOI == "" {
+		ref.Biblio.DOI = v
+	}
+	// DOI in Key
+	v = PatDOINoHyphen.FindString(ref.Key)
 	if v != "" && ref.Biblio.DOI == "" {
 		ref.Biblio.DOI = v
 	}
