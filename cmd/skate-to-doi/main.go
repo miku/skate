@@ -27,7 +27,7 @@ var (
 	bestEffort     = flag.Bool("B", false, "only log errors, but do not stop")
 	skipNonMatches = flag.Bool("S", false, "do not emit a line for non-matches")
 
-	PatDOI = regexp.MustCompile(`10.[0-9]{1,8}/[^ ]*[\w]`)
+	PatDOI = regexp.MustCompile(`10[.][0-9]{1,8}/[^ ]*[\w]`)
 )
 
 func main() {
