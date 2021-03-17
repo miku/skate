@@ -23,6 +23,7 @@
 /skate-fixup
 /skate-to-doi
 /skate-bref-id
+/skate-from-unstructured
 packaging/debian/skate/usr
 skate_*_amd64.deb
 
