@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/miku/skate/must"
+	"git.archive.org/martin/cgraph/skate/must"
 )
 
 func TestZipRun(t *testing.T) {

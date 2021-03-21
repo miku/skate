@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/miku/parallel"
-	"github.com/miku/skate"
+	"git.archive.org/martin/cgraph/skate"
 
 	jsoniter "github.com/json-iterator/go"
 )

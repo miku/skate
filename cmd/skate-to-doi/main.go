@@ -16,7 +16,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/miku/skate/parallel"
+	"git.archive.org/martin/cgraph/skate/parallel"
 )
 
 var (

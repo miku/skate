@@ -17,8 +17,8 @@ import (
 	"strings"
 
 	jsoniter "github.com/json-iterator/go"
-	"github.com/miku/skate"
-	"github.com/miku/skate/parallel"
+	"git.archive.org/martin/cgraph/skate"
+	"git.archive.org/martin/cgraph/skate/parallel"
 )
 
 var (

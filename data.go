@@ -1,6 +1,6 @@
 package skate
 
-import "github.com/miku/skate/set"
+import "git.archive.org/martin/cgraph/skate/set"
 
 var (
 	BlacklistTitleFragments = set.FromSlice([]string{

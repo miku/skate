@@ -13,8 +13,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/miku/skate/set"
-	"github.com/miku/skate/zipkey"
+	"git.archive.org/martin/cgraph/skate/set"
+	"git.archive.org/martin/cgraph/skate/zipkey"
 )
 
 // This file is a port of fuzzycat.verify to Go.
